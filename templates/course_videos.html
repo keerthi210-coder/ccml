@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Course Content — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner">
+    <div class="breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a> › <a href="{{ url_for('course_detail', course_id=course.id) }}">{{ course.title }}</a> › Course Content</div>
+    <h1>Course Content</h1>
+    <p style="color:rgba(255,255,255,0.85);">{{ course.title }}</p>
+  </div>
+</div>
+
+<div style="max-width:1000px;margin:0 auto;padding:40px 20px;">
+
+  <!-- VIDEOS SECTION -->
+  <div style="margin-bottom:48px;">
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <span style="background:var(--primary);color:#fff;width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;">▶</span>
+      Recorded Classes
+      <span style="font-size:14px;font-weight:500;color:var(--text-muted);">({{ videos|length }})</span>
+    </h2>
+    {% if videos %}
+    <div style="display:flex;flex-direction:column;gap:24px;">
+      {% for video in videos %}
+      <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;">
+        {% if 'cloudinary' in video.video_url %}
+        <video controls style="width:100%;max-height:480px;background:#000;display:block;">
+          <source src="{{ video.video_url }}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        {% else %}
+        <div class="yt-embed-wrap">
+          <iframe src="{{ video.video_url }}" title="{{ video.title }}" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        {% endif %}
+        <div style="padding:20px;">
+          <h3 style="font-size:17px;font-weight:700;margin-bottom:6px;">{{ loop.index }}. {{ video.title }}</h3>
+          {% if video.description %}<p style="color:var(--text-muted);font-size:14px;">{{ video.description }}</p>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;color:var(--text-muted);box-shadow:var(--shadow);">
+      <i class="fas fa-video" style="font-size:32px;margin-bottom:12px;opacity:.4;"></i>
+      <p>No recorded classes uploaded yet. Check back soon.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- STUDY MATERIALS SECTION -->
+  <div>
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <span style="background:#e65100;color:#fff;width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;">📄</span>
+      Study Materials
+      <span style="font-size:14px;font-weight:500;color:var(--text-muted);">({{ materials|length }})</span>
+    </h2>
+    {% if materials %}
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      {% for m in materials %}
+      <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;border-radius:8px;background:#fff3e0;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
+            {% if m.file_type == 'pdf' %}📕
+            {% elif m.file_type in ['ppt','pptx'] %}📊
+            {% else %}📝{% endif %}
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:15px;">{{ m.title }}</div>
+            {% if m.description %}<div style="font-size:13px;color:var(--text-muted);margin-top:2px;">{{ m.description }}</div>{% endif %}
+            <span style="font-size:11px;background:var(--primary);color:#fff;padding:2px 8px;border-radius:4px;margin-top:4px;display:inline-block;">{{ m.file_type|upper }}</span>
+          </div>
+        </div>
+        <a href="{{ m.file_url }}" target="_blank" download
+           style="display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;">
+          <i class="fas fa-download"></i> Download
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;color:var(--text-muted);box-shadow:var(--shadow);">
+      <i class="fas fa-file-pdf" style="font-size:32px;margin-bottom:12px;opacity:.4;"></i>
+      <p>No study materials uploaded yet. Check back soon.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

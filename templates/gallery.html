@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Gallery — CCMC{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner">
+    <h1>📸 Gallery</h1>
+    <p>Moments from our Knowledge & Study Centres</p>
+    <div class="breadcrumb"><a href="{{ url_for('index') }}">Home</a> › Gallery</div>
+  </div>
+</div>
+
+<div style="max-width:1280px;margin:0 auto;padding:48px 20px;">
+
+  <!-- MAIN GALLERY from DB -->
+  {% if photos %}
+  <div class="section-head" style="margin-bottom:28px;">
+    <div class="section-tag">Our Centre</div>
+    <h2>Knowledge & Study Centre</h2>
+  </div>
+  <div class="gallery-grid" style="margin-bottom:48px;">
+    {% for photo in photos %}
+    <div class="gallery-item" onclick="openLightbox('{{ photo.image_url }}','{{ photo.caption }}')">
+      <img src="{{ photo.image_url }}" alt="{{ photo.caption }}" loading="lazy"/>
+      {% if photo.caption %}<div class="gallery-caption">{{ photo.caption }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <!-- Fallback: show 3 WhatsApp images -->
+  <div class="section-head" style="margin-bottom:28px;">
+    <div class="section-tag">Our Centre</div>
+    <h2>Knowledge & Study Centre</h2>
+  </div>
+  <div class="gallery-grid" style="margin-bottom:48px;">
+    <div class="gallery-item" onclick="openLightbox('{{ url_for('static', filename='images/WhatsApp Image 2026-03-27 at 2.15.29 PM.jpeg') }}','CCMC Students in session')">
+      <img src="{{ url_for('static', filename='images/WhatsApp Image 2026-03-27 at 2.15.29 PM.jpeg') }}" alt="CCMC" loading="lazy"/>
+      <div class="gallery-caption">CCMC Students in session</div>
+    </div>
+    <div class="gallery-item" onclick="openLightbox('{{ url_for('static', filename='images/WhatsApp Image 2026-03-27 at 2.15.30 PM.jpeg') }}','TNPSC coaching class')">
+      <img src="{{ url_for('static', filename='images/WhatsApp Image 2026-03-27 at 2.15.30 PM.jpeg') }}" alt="CCMC" loading="lazy"/>
+      <div class="gallery-caption">TNPSC coaching class</div>
+    </div>
+    <div class="gallery-item" onclick="openLightbox('{{ url_for('static', filename='images/WhatsApp Image 2026-03-27 at 2.15.32 PM.jpeg') }}','Expert faculty guiding students')">
+      <img src="{{ url_for('static', filename='images/WhatsApp Image 2026-03-27 at 2.15.32 PM.jpeg') }}" alt="CCMC" loading="lazy"/>
+      <div class="gallery-caption">Expert faculty guiding students</div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;align-items:center;justify-content:center;flex-direction:column;" onclick="closeLightbox()">
+  <button onclick="closeLightbox()" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer;">✕</button>
+  <img id="lightboxImg" src="" style="max-width:90vw;max-height:80vh;border-radius:8px;object-fit:contain;"/>
+  <p id="lightboxCaption" style="color:rgba(255,255,255,0.8);margin-top:12px;font-size:14px;"></p>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+function openLightbox(src, caption) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightboxCaption').textContent = caption || '';
+  const lb = document.getElementById('lightbox');
+  lb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
+</script>
+{% endblock %}

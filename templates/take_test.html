@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block title %}{{ test.title }} — CCMC{% endblock %}
+{% block head %}
+<style>
+.test-wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px; }
+.test-header { background: var(--primary); color: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.test-header h1 { font-size: clamp(16px, 3vw, 22px); font-weight: 800; margin-bottom: 4px; }
+.test-header p { opacity: .85; font-size: 13px; }
+.timer-box { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 16px; text-align: center; flex-shrink: 0; }
+.timer-box .timer-val { font-size: clamp(22px, 5vw, 28px); font-weight: 800; font-variant-numeric: tabular-nums; }
+.timer-box small { font-size: 11px; opacity: .8; display: block; }
+.timer-box.warning { background: rgba(229,57,53,0.4); animation: pulse .8s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+.q-card { background: #fff; border-radius: 12px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; border-left: 4px solid var(--primary); }
+.q-card .q-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
+.q-num-badge { background: var(--primary); color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.q-marks { font-size: 12px; color: var(--text-muted); }
+.q-text { font-size: 15px; font-weight: 600; margin-bottom: 16px; line-height: 1.5; }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.option-btn { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: all .2s; background: #fff; text-align: left; font-size: 14px; font-weight: 500; width: 100%; min-height: 48px; }
+.option-btn:hover { border-color: var(--primary); background: rgba(26,35,126,0.04); }
+.option-btn.selected { border-color: var(--primary); background: rgba(26,35,126,0.08); color: var(--primary); }
+.option-btn .opt-label { width: 30px; height: 30px; border-radius: 50%; border: 2px solid currentColor; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+.test-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 10px; }
+.test-nav button { flex: 1; padding: 11px; border-radius: 7px; font-weight: 600; font-size: 14px; cursor: pointer; }
+.q-palette { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.q-dot { width: 38px; height: 38px; border-radius: 8px; border: 2px solid var(--border); background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; }
+.q-dot.answered { background: var(--green); border-color: var(--green); color: #fff; }
+.q-dot.current { border-color: var(--primary); color: var(--primary); }
+.submit-bar { background: #fff; border-radius: 12px; box-shadow: var(--shadow); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.btn-submit-test { background: var(--accent); color: #fff; border: none; padding: 13px 28px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background .2s; }
+.btn-submit-test:hover { background: #c62828; }
+@media (max-width: 480px) {
+  .test-header { flex-direction: column; align-items: flex-start; }
+  .timer-box { align-self: flex-end; }
+  .q-dot { width: 34px; height: 34px; font-size: 12px; }
+  .option-btn { font-size: 13px; padding: 11px 12px; }
+  .test-nav button { font-size: 13px; padding: 10px; }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="test-wrap">
+  <div class="test-header">
+    <div>
+      <h1>{{ test.title }}</h1>
+      <p>{{ test.questions|length }} Questions · {{ test.duration_mins }} Minutes · {{ test.course.title if test.course else '🌐 Global Test — All Students' }}</p>
+    </div>
+    <div class="timer-box" id="timerBox">
+      <div class="timer-val" id="timerDisplay">{{ '%02d:%02d'|format(test.duration_mins, 0) }}</div>
+      <small>Time Remaining</small>
+    </div>
+  </div>
+
+  <!-- Question Palette -->
+  <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:16px 20px;margin-bottom:20px;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-muted);">QUESTION PALETTE</div>
+    <div class="q-palette" id="qPalette">
+      {% for q in test.questions %}
+      <button class="q-dot {% if loop.first %}current{% endif %}" id="dot{{ loop.index }}" onclick="goToQ({{ loop.index }})">{{ loop.index }}</button>
+      {% endfor %}
+    </div>
+    <div style="display:flex;gap:16px;font-size:12px;color:var(--text-muted);">
+      <span><span style="display:inline-block;width:12px;height:12px;background:var(--green);border-radius:3px;margin-right:4px;"></span>Answered</span>
+      <span><span style="display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-radius:3px;margin-right:4px;"></span>Not Answered</span>
+    </div>
+  </div>
+
+  <!-- Questions -->
+  {% for q in test.questions %}
+  <div class="q-card" id="qcard{{ loop.index }}" {% if not loop.first %}style="display:none"{% endif %}>
+    <div class="q-header">
+      <span class="q-num-badge">Q{{ loop.index }} of {{ test.questions|length }}</span>
+      <span class="q-marks">{{ q.marks }} Mark{% if q.marks > 1 %}s{% endif %}</span>
+    </div>
+    <div class="q-text">{{ q.text }}</div>
+    <div class="options">
+      {% for opt, label in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+      <button class="option-btn" id="opt{{ q.id }}_{{ opt }}" onclick="selectAnswer({{ q.id }}, '{{ opt }}', {{ loop.index }}, {{ loop.index0 + 1 }})">
+        <span class="opt-label">{{ opt }}</span>
+        <span>{{ label }}</span>
+      </button>
+      {% endfor %}
+    </div>
+    <div class="test-nav">
+      {% if not loop.first %}
+      <button onclick="goToQ({{ loop.index - 1 }})" style="background:none;border:1.5px solid var(--border);padding:9px 20px;border-radius:7px;cursor:pointer;font-weight:600;">← Previous</button>
+      {% else %}<span></span>{% endif %}
+      {% if not loop.last %}
+      <button onclick="goToQ({{ loop.index + 1 }})" style="background:var(--primary);color:#fff;border:none;padding:9px 20px;border-radius:7px;cursor:pointer;font-weight:600;">Next →</button>
+      {% else %}
+      <button onclick="confirmSubmit()" class="btn-submit-test">Submit Test</button>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="submit-bar">
+    <div>
+      <strong id="answeredCount">0</strong> of {{ test.questions|length }} answered
+    </div>
+    <button onclick="confirmSubmit()" class="btn-submit-test">Submit Test</button>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const answers = {};
+const totalSecs = {{ test.duration_mins }} * 60;
+let secsLeft = totalSecs;
+let startTime = Date.now();
+let currentQ = 1;
+const totalQ = {{ test.questions|length }};
+
+// Timer
+const timerDisplay = document.getElementById('timerDisplay');
+const timerBox = document.getElementById('timerBox');
+const timerInterval = setInterval(() => {
+  secsLeft--;
+  const m = Math.floor(secsLeft / 60), s = secsLeft % 60;
+  timerDisplay.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if (secsLeft <= 60) timerBox.classList.add('warning');
+  if (secsLeft <= 0) { clearInterval(timerInterval); submitTest(); }
+}, 1000);
+
+function goToQ(n) {
+  document.getElementById(`qcard${currentQ}`).style.display = 'none';
+  document.getElementById(`dot${currentQ}`).classList.remove('current');
+  currentQ = n;
+  document.getElementById(`qcard${n}`).style.display = 'block';
+  document.getElementById(`dot${n}`).classList.add('current');
+}
+
+function selectAnswer(qId, opt, optIdx, qNum) {
+  // Clear previous selection for this question
+  ['A','B','C','D'].forEach(o => {
+    const btn = document.getElementById(`opt${qId}_${o}`);
+    if (btn) btn.classList.remove('selected');
+  });
+  document.getElementById(`opt${qId}_${opt}`).classList.add('selected');
+  answers[qId] = opt;
+  // Mark palette
+  const dot = document.getElementById(`dot${qNum}`);
+  if (dot) dot.classList.add('answered');
+  document.getElementById('answeredCount').textContent = Object.keys(answers).length;
+}
+
+function confirmSubmit() {
+  const unanswered = totalQ - Object.keys(answers).length;
+  const msg = unanswered > 0
+    ? `You have ${unanswered} unanswered question(s). Submit anyway?`
+    : 'Submit the test now?';
+  if (confirm(msg)) submitTest();
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+  fetch(`/test/{{ test.id }}/submit`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ answers, time_taken: timeTaken })
+  }).then(r => r.json()).then(d => {
+    if (d.success) window.location.href = `/test/{{ test.id }}/result`;
+    else alert(d.error || 'Submission failed');
+  });
+}
+</script>
+{% endblock %}

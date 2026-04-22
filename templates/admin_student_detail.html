@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Student — {{ student.name }}{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner">
+    <h1>Student Profile</h1>
+    <div class="breadcrumb"><a href="{{ url_for('admin') }}">Admin</a> › <a href="{{ url_for('admin') }}">Users</a> › {{ student.name }}</div>
+  </div>
+</div>
+<div class="admin-wrap">
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;">
+
+    <!-- PROFILE CARD -->
+    <div class="admin-section" style="text-align:center;">
+      <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);color:#fff;font-size:32px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        {% if student.avatar %}<img src="{{ student.avatar }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;"/>
+        {% else %}{{ student.name[0].upper() }}{% endif %}
+      </div>
+      <h3>{{ student.name }}</h3>
+      <p style="color:var(--text-muted);font-size:13px;">{{ student.email }}</p>
+      <p style="color:var(--text-muted);font-size:13px;">📱 {{ student.mobile or '—' }}</p>
+      <p style="color:var(--text-muted);font-size:13px;">📞 {{ student.phone or '—' }}</p>
+      <p style="color:var(--text-muted);font-size:13px;">🎂 {{ student.dob or '—' }}</p>
+      <p style="color:var(--text-muted);font-size:13px;">🪪 {{ student.aadhaar_number or '—' }}</p>
+      <p style="color:var(--text-muted);font-size:13px;">🩸 {{ student.blood_group or '—' }}</p>
+      <p style="color:var(--text-muted);font-size:13px;">🎓 {{ student.educational_qualification or '—' }}</p>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Joined {{ student.created_at.strftime('%d %b %Y') }}</p>
+      {% if student.present_address or student.permanent_address %}
+      <div style="margin-top:12px;text-align:left;">
+        {% if student.present_address %}
+        <div style="background:var(--bg-light);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px;">
+          <strong>Present Address</strong><br/>{{ student.present_address }}
+        </div>
+        {% endif %}
+        {% if student.permanent_address %}
+        <div style="background:var(--bg-light);border-radius:8px;padding:10px 12px;font-size:13px;">
+          <strong>Permanent Address</strong><br/>{{ student.permanent_address }}
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+        <div style="background:var(--bg-light);border-radius:8px;padding:12px;"><strong>{{ enrollments|length }}</strong><br/><small>Courses Enrolled</small></div>
+        <div style="background:var(--bg-light);border-radius:8px;padding:12px;"><strong>{{ attempts|length }}</strong><br/><small>Tests Attempted</small></div>
+        {% if attempts %}
+        <div style="background:var(--bg-light);border-radius:8px;padding:12px;">
+          <strong>{{ (attempts|map(attribute='score')|sum / attempts|map(attribute='total_marks')|sum * 100)|int if attempts|map(attribute='total_marks')|sum > 0 else 0 }}%</strong><br/><small>Avg Score</small>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div>
+      <!-- ENROLLED COURSES -->
+      <div class="admin-section">
+        <h2>Enrolled Courses ({{ enrollments|length }})</h2>
+        {% if enrollments %}
+        <table class="admin-table">
+          <thead><tr><th>Course</th><th>Category</th><th>Enrolled On</th></tr></thead>
+          <tbody>
+            {% for e in enrollments %}
+            <tr>
+              <td>{{ e.course.title }}</td>
+              <td><span class="cat-pill">{{ e.course.category }}</span></td>
+              <td>{{ e.enrolled_at.strftime('%d %b %Y') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p style="color:var(--text-muted);">No courses enrolled yet.</p>{% endif %}
+      </div>
+
+      <!-- TEST HISTORY -->
+      <div class="admin-section">
+        <h2>Test History ({{ attempts|length }})</h2>
+        {% if attempts %}
+        <table class="admin-table">
+          <thead><tr><th>Test</th><th>Score</th><th>%</th><th>Correct</th><th>Wrong</th><th>Time</th><th>Date</th><th>Retake After</th></tr></thead>
+          <tbody>
+            {% for a in attempts %}
+            {% set pct = (a.score/a.total_marks*100)|int if a.total_marks > 0 else 0 %}
+            <tr>
+              <td>{{ a.test.title }}</td>
+              <td><strong>{{ a.score }}/{{ a.total_marks }}</strong></td>
+              <td><span style="color:{% if pct>=60 %}var(--green){% else %}var(--accent){% endif %};font-weight:700;">{{ pct }}%</span></td>
+              <td style="color:var(--green);">{{ a.correct_count }}</td>
+              <td style="color:var(--accent);">{{ a.wrong_count }}</td>
+              <td>{{ '%d:%02d'|format(a.time_taken//60, a.time_taken%60) }}</td>
+              <td>{{ a.submitted_at.strftime('%d %b %Y') }}</td>
+              <td style="font-size:12px;color:var(--text-muted);">{{ a.retake_after.strftime('%d %b %Y') if a.retake_after else '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p style="color:var(--text-muted);">No tests attempted yet.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}About Us — CCMC{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner">
+    <h1>About CCMC</h1>
+    <div class="breadcrumb"><a href="{{ url_for('index') }}">Home</a> › About Us</div>
+  </div>
+</div>
+<div class="about-wrap">
+
+  <!-- CCMC INTRO -->
+  <div class="ccmc-intro-section">
+    <div class="ccmc-intro-text">
+      <div class="section-tag">Who We Are</div>
+      <h2>Coimbatore City Municipal Corporation</h2>
+      <p>The Coimbatore City Municipal Corporation (CCMC) is the governing body responsible for the administration, infrastructure, and overall development of Coimbatore city. Committed to enhancing quality of life, CCMC focuses on delivering efficient public services and promoting inclusive urban growth.</p>
+      <p>Through its <strong>Knowledge & Study Centres</strong> and <strong>Padaipagam</strong> creative learning spaces, CCMC facilitates competitive examination coaching, skill development programs, and creative activity sessions — creating accessible opportunities for every citizen.</p>
+      <div class="ccmc-highlights">
+        <div class="ccmc-hl"><i class="fas fa-landmark"></i><span>Municipal Governance</span></div>
+        <div class="ccmc-hl"><i class="fas fa-book-open"></i><span>Knowledge Centres</span></div>
+        <div class="ccmc-hl"><i class="fas fa-palette"></i><span>Padaipagam</span></div>
+        <div class="ccmc-hl"><i class="fas fa-certificate"></i><span>Free Programs</span></div>
+      </div>
+    </div>
+    <div class="ccmc-intro-img">
+      <img src="{{ url_for('static', filename='images/TNPSC.jpg.jpeg') }}" alt="CCMC" />
+      <div class="ccmc-badge-card">
+        <div class="ccmc-badge-icon">🏛️</div>
+        <div><strong>Government Initiative</strong><small>All programs 100% Free</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="about-stats-bar">
+    <div class="astat-bar"><strong>500+</strong><span>Students Trained</span></div>
+    <div class="astat-bar"><strong>100+</strong><span>Selections</span></div>
+    <div class="astat-bar"><strong>10</strong><span>Study Centres</span></div>
+    <div class="astat-bar"><strong>5+</strong><span>Expert Faculty</span></div>
+    <div class="astat-bar"><strong>100%</strong><span>Free Programs</span></div>
+  </div>
+
+  <!-- TWO CENTRES -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:48px;">
+    <div class="mission-card" style="border-top:4px solid var(--primary);">
+      <i class="fas fa-graduation-cap" style="color:var(--primary);"></i>
+      <h4>Knowledge & Study Centre</h4>
+      <p>Dedicated to empowering students with quality education and structured learning methods. Expert guidance, updated study materials, and a focused environment for competitive exam preparation.</p>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">
+        {% for c in ['TTP','TNPSC','SSC','RRB','Banking'] %}
+        <span style="background:rgba(26,35,126,0.08);color:var(--primary);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ c }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="mission-card" style="border-top:4px solid #e65100;">
+      <i class="fas fa-palette" style="color:#e65100;"></i>
+      <h4>Padaipagam — Creative Learning</h4>
+      <p>A vibrant platform inspiring students to discover their talents through innovative and activity-based learning. Where curiosity meets creativity — helping students think independently and explore new ideas.</p>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">
+        {% for c in ['Chess','Tally+GST','AI & Digital Marketing','Abacus','Mandala','STEM','Junior Coders','Acrylic & Sketch'] %}
+        <span style="background:rgba(230,81,0,0.08);color:#e65100;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ c }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSION / VISION / VALUES -->
+  <div class="about-mission">
+    <div class="mission-card"><i class="fas fa-bullseye"></i>
+      <h4>Our Mission</h4>
+      <p>To provide quality education and coaching that empowers aspirants to achieve their civil services and career dreams — completely free of cost for all citizens of Coimbatore.</p>
+    </div>
+    <div class="mission-card"><i class="fas fa-eye"></i>
+      <h4>Our Vision</h4>
+      <p>To be Coimbatore's most trusted learning platform, producing skilled professionals and civil servants who serve the nation with integrity and dedication.</p>
+    </div>
+    <div class="mission-card"><i class="fas fa-heart"></i>
+      <h4>Our Values</h4>
+      <p>Inclusive education, community empowerment, excellence in teaching — making quality learning accessible to every citizen of Coimbatore.</p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

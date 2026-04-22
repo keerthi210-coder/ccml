@@ -1,0 +1,186 @@
+{% extends 'admin_base.html' %}
+{% block title %}Edit Course — {{ course.title }}{% endblock %}
+{% block nav_courses %}active{% endblock %}
+{% block admin_content %}
+<div style="padding-bottom:16px;margin-bottom:20px;border-bottom:2px solid var(--border);">
+  <h1 style="font-size:22px;font-weight:800;color:var(--primary);margin:0;">Edit Course</h1>
+  <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">{{ course.title }}</p>
+</div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div style="padding:12px 16px;border-radius:8px;margin-bottom:16px;background:{% if cat=='success' %}#e8f5e9;color:#2e7d32{% else %}#ffebee;color:#c62828{% endif %};">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Main edit form -->
+  <form id="editForm" method="POST" action="{{ url_for('admin_edit_course', cid=course.id) }}" enctype="multipart/form-data" class="admin-form">
+
+    <div class="admin-section">
+      <h2>Basic Info</h2>
+      <div class="form-row">
+        <div class="form-group"><label>Course Title *</label><input type="text" name="title" value="{{ course.title }}" required/></div>
+        <div class="form-group"><label>Category *</label>
+          <select name="category" required>
+            {% for cat in categories %}
+            <option value="{{ cat.name }}" {% if course.category == cat.name %}selected{% endif %}>{{ cat.label or cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Sub Category</label><input type="text" name="sub_category" value="{{ course.sub_category }}"/></div>
+        <div class="form-group"><label>Mode</label>
+          <select name="mode">
+            {% for m in ['Online','Offline','Offline/Online','Hybrid'] %}
+            <option {% if course.mode == m %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Description *</label><textarea name="description" rows="4" required>{{ course.description }}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Duration</label><input type="text" name="duration" value="{{ course.duration }}"/></div>
+        <div class="form-group"><label>No. of Lessons</label><input type="number" name="lessons" value="{{ course.lessons }}" min="0"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Badge</label>
+          <select name="badge">
+            <option value="" {% if not course.badge %}selected{% endif %}>None</option>
+            {% for b in ['Bestseller','Top Rated','New'] %}
+            <option {% if course.badge == b %}selected{% endif %}>{{ b }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group"><label>YouTube Embed URL</label><input type="url" name="youtube_url" value="{{ course.youtube_url }}"/></div>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h2>Images</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Thumbnail</label>
+          {% if course.thumbnail %}<img src="{{ course.thumbnail }}" style="height:60px;border-radius:6px;margin-bottom:8px;display:block;"/>{% endif %}
+          <input type="file" name="thumbnail_file" accept="image/*"/>
+          <small style="color:var(--text-muted);">Or paste URL:</small>
+          <input type="url" name="thumbnail" value="{{ course.thumbnail }}" style="margin-top:4px;"/>
+        </div>
+        <div class="form-group">
+          <label>Exam Logo</label>
+          {% if course.logo_url %}<img src="{{ course.logo_url }}" style="height:60px;border-radius:6px;margin-bottom:8px;display:block;"/>{% endif %}
+          <input type="file" name="logo_file" accept="image/*"/>
+          <small style="color:var(--text-muted);">Or paste URL:</small>
+          <input type="url" name="logo_url" value="{{ course.logo_url }}" style="margin-top:4px;"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h2>Locations</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:6px;">
+        {% for centre in centres %}
+        <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;">
+          <input type="checkbox" name="centre_ids" value="{{ centre.id }}" {% if centre.id in selected_centre_ids %}checked{% endif %}/>
+          {{ centre.name }}{% if centre.coming_soon %} <span style="font-size:10px;background:#e65100;color:#fff;padding:1px 6px;border-radius:4px;">Soon</span>{% endif %}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h2>Add More Videos</h2>
+      <div id="videoList">
+        <div class="video-entry" style="background:var(--bg-light);border-radius:8px;padding:12px;margin-bottom:8px;">
+          <input type="text" name="video_title[]" placeholder="Video title" style="margin-bottom:6px;"/>
+          <input type="file" name="video_file[]" accept="video/*" style="margin-bottom:4px;"/>
+          <input type="url" name="video_url[]" placeholder="Or YouTube embed URL"/>
+        </div>
+      </div>
+      <button type="button" onclick="addVideoEntry()" style="background:none;border:1px dashed var(--border);padding:6px 16px;border-radius:6px;cursor:pointer;color:var(--primary);font-size:13px;">+ Add Another Video</button>
+    </div>
+
+    <div class="admin-section">
+      <h2>Add More Study Materials</h2>
+      <div id="matList">
+        <div class="mat-entry" style="background:var(--bg-light);border-radius:8px;padding:12px;margin-bottom:8px;">
+          <input type="text" name="mat_title[]" placeholder="Material title" style="margin-bottom:6px;"/>
+          <input type="file" name="mat_file[]" accept=".pdf,.doc,.docx,.ppt,.pptx"/>
+        </div>
+      </div>
+      <button type="button" onclick="addMatEntry()" style="background:none;border:1px dashed var(--border);padding:6px 16px;border-radius:6px;cursor:pointer;color:var(--primary);font-size:13px;">+ Add Another Material</button>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;padding:0 0 32px;">
+      <button type="submit" class="btn-modal-submit" style="width:auto;padding:12px 32px;">Save Changes</button>
+      <a href="{{ url_for('admin') }}" style="color:var(--text-muted);font-size:14px;">← Back to Admin</a>
+    </div>
+
+  </form>
+
+  <!-- Existing videos — outside main form to avoid nesting -->
+  {% if videos %}
+  <div class="admin-section">
+    <h3 style="font-size:15px;margin-bottom:12px;">Existing Videos ({{ videos|length }})</h3>
+    {% for v in videos %}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-light);border-radius:8px;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <strong>{{ loop.index }}. {{ v.title }}</strong>
+        <span style="font-size:11px;margin-left:8px;{% if 'cloudinary' in v.video_url %}background:#e8f5e9;color:#2e7d32{% else %}background:#fff3e0;color:#e65100{% endif %};padding:2px 8px;border-radius:4px;">
+          {% if 'cloudinary' in v.video_url %}☁ Cloudinary{% else %}▶ YouTube{% endif %}
+        </span>
+      </div>
+      <form method="POST" action="{{ url_for('admin_delete_video', vid=v.id) }}" onsubmit="return confirm('Delete?')">
+        <button type="submit" class="btn-delete">Delete</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Existing materials — outside main form -->
+  {% if materials %}
+  <div class="admin-section">
+    <h3 style="font-size:15px;margin-bottom:12px;">Existing Materials ({{ materials|length }})</h3>
+    {% for m in materials %}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-light);border-radius:8px;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <strong>📄 {{ loop.index }}. {{ m.title }}</strong>
+        <span style="font-size:11px;background:var(--primary);color:#fff;padding:2px 8px;border-radius:4px;margin-left:6px;">{{ m.file_type|upper }}</span>
+        <a href="{{ m.file_url }}" target="_blank" style="font-size:12px;color:var(--primary);margin-left:8px;">View ↗</a>
+      </div>
+      <form method="POST" action="{{ url_for('admin_delete_material', mid=m.id) }}" onsubmit="return confirm('Delete?')">
+        <button type="submit" class="btn-delete">Delete</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addVideoEntry() {
+  const div = document.createElement('div');
+  div.style.cssText = 'background:var(--bg-light);border-radius:8px;padding:12px;margin-bottom:8px;position:relative;';
+  div.innerHTML = `
+    <button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--accent);cursor:pointer;font-size:16px;">✕</button>
+    <input type="text" name="video_title[]" placeholder="Video title" style="margin-bottom:6px;"/>
+    <input type="file" name="video_file[]" accept="video/*" style="margin-bottom:4px;"/>
+    <input type="url" name="video_url[]" placeholder="Or YouTube embed URL"/>
+  `;
+  document.getElementById('videoList').appendChild(div);
+}
+function addMatEntry() {
+  const div = document.createElement('div');
+  div.style.cssText = 'background:var(--bg-light);border-radius:8px;padding:12px;margin-bottom:8px;position:relative;';
+  div.innerHTML = `
+    <button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--accent);cursor:pointer;font-size:16px;">✕</button>
+    <input type="text" name="mat_title[]" placeholder="Material title" style="margin-bottom:6px;"/>
+    <input type="file" name="mat_file[]" accept=".pdf,.doc,.docx,.ppt,.pptx"/>
+  `;
+  document.getElementById('matList').appendChild(div);
+}
+</script>
+{% endblock %}

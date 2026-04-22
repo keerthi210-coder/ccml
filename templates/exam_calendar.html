@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block title %}Exam Calendar — CCMC{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner">
+    <h1>📅 Exam Calendar</h1>
+    <p style="color:rgba(255,255,255,0.85);">All upcoming mock tests and exams — every Saturday</p>
+    <div class="breadcrumb"><a href="{{ url_for('index') }}">Home</a> › Exam Calendar</div>
+  </div>
+</div>
+
+<div style="max-width:1100px;margin:0 auto;padding:40px 20px;">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div style="padding:12px 16px;border-radius:8px;margin-bottom:16px;background:{% if cat=='success' %}#e8f5e9;color:#2e7d32{% else %}#ffebee;color:#c62828{% endif %};">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- CALENDAR GRID -->
+  <div id="calendarWrap" style="background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:24px;margin-bottom:32px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <button onclick="prevMonth()" style="background:var(--bg-light);border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:18px;">‹</button>
+      <h2 id="calMonthLabel" style="font-size:20px;font-weight:800;color:var(--primary);margin:0;"></h2>
+      <button onclick="nextMonth()" style="background:var(--bg-light);border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:18px;">›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px;">
+      {% for d in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] %}
+      <div style="text-align:center;font-size:12px;font-weight:700;color:{% if d=='Sat' %}var(--primary){% else %}var(--text-muted){% endif %};padding:6px 0;">{{ d }}</div>
+      {% endfor %}
+    </div>
+    <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;"></div>
+  </div>
+
+  <!-- UPCOMING TESTS LIST -->
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;">Upcoming Exams</h2>
+  {% if tests %}
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    {% for t in tests %}
+    <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;border-left:4px solid var(--primary);">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
+          {% if t.course %}{{ t.course.category }}{% else %}General{% endif %}
+        </div>
+        <h3 style="font-size:17px;font-weight:700;margin:0 0 6px;">{{ t.title }}</h3>
+        {% if t.description %}<p style="font-size:13px;color:var(--text-muted);margin:0 0 8px;">{{ t.description }}</p>{% endif %}
+        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--text-muted);">
+          <span>📅 <strong style="color:var(--text);">{{ t.scheduled_date }}</strong></span>
+          <span>⏰ <strong style="color:var(--text);">{{ t.scheduled_time }}</strong></span>
+          <span>⏱ <strong style="color:var(--text);">{{ t.duration_mins }} mins</strong></span>
+          <span style="background:#e8f5e9;color:#2e7d32;padding:2px 10px;border-radius:12px;font-weight:600;">📆 Saturday</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:140px;">
+        <button onclick="openRegister({{ t.id }}, '{{ t.title }}')"
+          style="background:var(--primary);color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">
+          Register / Apply
+        </button>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('take_test', test_id=t.id) }}"
+           style="background:var(--green);color:#fff;padding:10px 20px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;text-align:center;">
+          Attempt Now
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:48px;color:var(--text-muted);">
+    <div style="font-size:48px;margin-bottom:12px;">📭</div>
+    <p>No upcoming exams scheduled yet. Check back soon.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- REGISTER MODAL -->
+<div id="registerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;position:relative;">
+    <button onclick="closeRegister()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">✕</button>
+    <h3 id="registerTitle" style="font-size:18px;font-weight:800;margin:0 0 6px;color:var(--primary);"></h3>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Register your interest. You'll receive an email reminder before the exam.</p>
+    <form id="registerForm" method="POST">
+      {% if current_user.is_authenticated %}
+      <input type="hidden" name="name" value="{{ current_user.name }}"/>
+      <input type="hidden" name="email" value="{{ current_user.email }}"/>
+      <input type="hidden" name="phone" value="{{ current_user.phone or current_user.mobile }}"/>
+      <p style="background:#e8f5e9;border-radius:8px;padding:10px 14px;font-size:13px;color:#2e7d32;">
+        ✓ Registering as <strong>{{ current_user.name }}</strong> ({{ current_user.email }})
+      </p>
+      {% else %}
+      <div class="form-group"><label>Full Name *</label><input type="text" name="name" required placeholder="Your name"/></div>
+      <div class="form-group"><label>Email *</label><input type="email" name="email" required placeholder="you@example.com"/></div>
+      <div class="form-group"><label>Phone</label><input type="tel" name="phone" placeholder="10-digit mobile" maxlength="10"/></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+        To attempt the exam, you'll need to <a href="#" onclick="closeRegister();openPortal('signup')">create a free account</a>.
+      </p>
+      {% endif %}
+      <button type="submit" class="btn-modal-submit" style="margin-top:12px;">Confirm Registration</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Calendar data from server
+const testDates = {
+  {% for date_str, tlist in calendar_data.items() %}
+  "{{ date_str }}": {{ tlist|length }},
+  {% endfor %}
+};
+
+let currentYear, currentMonth;
+
+function initCalendar() {
+  const now = new Date();
+  currentYear = now.getFullYear();
+  currentMonth = now.getMonth();
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonthLabel').textContent = `${months[currentMonth]} ${currentYear}`;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const today = new Date().toISOString().split('T')[0];
+
+  // Empty cells
+  for (let i = 0; i < firstDay; i++) {
+    grid.innerHTML += `<div></div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isSat = new Date(currentYear, currentMonth, d).getDay() === 6;
+    const hasTest = testDates[dateStr];
+    const isToday = dateStr === today;
+    let bg = '#fff', color = 'var(--text)', border = '1px solid var(--border)';
+    if (hasTest) { bg = '#1a237e'; color = '#fff'; border = 'none'; }
+    else if (isSat) { bg = '#e8eaf6'; color = 'var(--primary)'; }
+    if (isToday && !hasTest) { border = '2px solid var(--primary)'; }
+    grid.innerHTML += `
+      <div onclick="${hasTest ? `scrollToTest('${dateStr}')` : ''}"
+           style="text-align:center;padding:8px 4px;border-radius:8px;background:${bg};color:${color};border:${border};
+                  cursor:${hasTest ? 'pointer' : 'default'};font-size:13px;font-weight:${hasTest||isSat?'700':'400'};
+                  position:relative;transition:transform .15s;"
+           ${hasTest ? 'onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'\'"' : ''}>
+        ${d}${hasTest ? `<div style="font-size:9px;margin-top:2px;">📝 ${testDates[dateStr]}</div>` : ''}
+      </div>`;
+  }
+}
+
+function prevMonth() {
+  currentMonth--;
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+}
+function nextMonth() {
+  currentMonth++;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  renderCalendar();
+}
+function scrollToTest(dateStr) {
+  // Find test card with this date and highlight
+  document.querySelectorAll('[data-date]').forEach(el => {
+    el.style.borderLeft = el.dataset.date === dateStr ? '4px solid #ffd700' : '4px solid var(--primary)';
+  });
+}
+
+// Register modal
+function openRegister(testId, title) {
+  document.getElementById('registerTitle').textContent = title;
+  document.getElementById('registerForm').action = `/test/${testId}/register`;
+  document.getElementById('registerModal').style.display = 'flex';
+}
+function closeRegister() {
+  document.getElementById('registerModal').style.display = 'none';
+}
+document.getElementById('registerModal').addEventListener('click', function(e) {
+  if (e.target === this) closeRegister();
+});
+
+initCalendar();
+</script>
+{% endblock %}

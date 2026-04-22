@@ -1,0 +1,447 @@
+{% extends 'base.html' %}
+{% block title %}CCMC — UPSC, TNPSC, RRB, SSC, Banking Coaching{% endblock %}
+{% block content %}
+
+<!-- HERO SLIDER -->
+<section class="hero-section">
+  <div class="hero-slides" id="heroSlides">
+    {% for banner in banners %}
+    <div class="hero-slide {% if loop.first %}active{% endif %}">
+      <div class="hero-banner-img">
+        <img src="{{ banner.image_url }}" alt="{{ banner.title }}"/>
+      </div>
+      <div class="hero-overlay">
+        <div class="hero-content">
+          {% if banner.badge %}<div class="hero-badge">{{ banner.badge }}</div>{% endif %}
+          <h1>{{ banner.title | safe }}</h1>
+          <p>{{ banner.subtitle }}</p>
+          <div class="hero-btns">
+            <a href="{{ banner.btn_link }}" class="btn-hero-primary">{{ banner.btn_text }}</a>
+            <button class="btn-hero-secondary" onclick="openModal('enquiryModal')">Enquire Now</button>
+          </div>
+          {% if loop.first %}
+          <div class="hero-stats">
+            <div class="hstat"><strong>15,000+</strong><span>Students Trained</span></div>
+            <div class="hstat"><strong>500+</strong><span>Selections</span></div>
+            <div class="hstat"><strong>15+</strong><span>Years Experience</span></div>
+            <div class="hstat"><strong>50+</strong><span>Expert Faculty</span></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <button class="slide-btn prev" onclick="changeSlide(-1)">&#10094;</button>
+  <button class="slide-btn next" onclick="changeSlide(1)">&#10095;</button>
+  <div class="slide-dots" id="slideDots">
+    {% for banner in banners %}
+    <span class="dot {% if loop.first %}active{% endif %}" onclick="goSlide({{ loop.index0 }})"></span>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- CCMC INTRO STRIP -->
+<section class="ccmc-strip">
+  <div class="section-wrap" style="padding:40px 20px;">
+    <div class="ccmc-strip-inner">
+      <div class="ccmc-strip-icon">🏛️</div>
+      <div class="ccmc-strip-text">
+        <h3>About Coimbatore City Municipal Corporation (CCMC)</h3>
+        <p>CCMC is the governing body responsible for the administration and development of Coimbatore city. Through its <strong>Knowledge & Study Centres</strong>, CCMC provides free competitive exam coaching, skill development programs, and training sessions — creating accessible opportunities for every citizen to advance their career.</p>
+        <a href="{{ url_for('about') }}" class="ccmc-strip-link">Learn More About CCMC →</a>
+      </div>
+      <div class="ccmc-strip-badge">
+        <span>🆓</span>
+        <strong>100% Free</strong>
+        <small>Government Program</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUICK LINKS BAR -->
+<section class="quick-links-bar">
+  <div class="ql-container">
+    <a href="{{ url_for('courses_by_category', category='tnpsc') }}" class="ql-item">
+      <i class="fas fa-map-marker-alt"></i><span>TNPSC</span>
+    </a>
+    <a href="{{ url_for('courses_by_category', category='upsc') }}" class="ql-item">
+      <i class="fas fa-landmark"></i><span>UPSC</span>
+    </a>
+    <a href="{{ url_for('courses_by_category', category='rrb') }}" class="ql-item">
+      <i class="fas fa-train"></i><span>RRB</span>
+    </a>
+    <a href="{{ url_for('courses_by_category', category='ssc') }}" class="ql-item">
+      <i class="fas fa-building"></i><span>SSC</span>
+    </a>
+    <a href="{{ url_for('courses_by_category', category='banking') }}" class="ql-item">
+      <i class="fas fa-university"></i><span>Banking</span>
+    </a>
+    <a href="{{ url_for('courses_by_category', category='state psc') }}" class="ql-item">
+      <i class="fas fa-flag"></i><span>State PSC</span>
+    </a>
+    <a href="{{ url_for('contact') }}" class="ql-item ql-highlight">
+      <i class="fas fa-paper-plane"></i><span>Enquire Now</span>
+    </a>
+  </div>
+</section>
+
+<!-- EXAM TICKER -->
+{% if ticker_tests %}
+<div style="background:#1a237e;color:#fff;padding:0;overflow:hidden;white-space:nowrap;border-bottom:2px solid #ffd700;">
+  <div style="display:flex;align-items:center;">
+    <div style="background:#ffd700;color:#1a237e;font-weight:800;font-size:12px;padding:8px 16px;white-space:nowrap;flex-shrink:0;letter-spacing:1px;">
+      📢 UPCOMING EXAMS
+    </div>
+    <div style="overflow:hidden;flex:1;">
+      <div class="ticker-track" style="display:inline-flex;animation:ticker 30s linear infinite;padding-left:100%;">
+        {% for t in ticker_tests %}
+        <a href="{{ url_for('exam_calendar') }}" style="color:#ffd700;text-decoration:none;font-size:13px;font-weight:600;margin-right:60px;white-space:nowrap;">
+          📝 {{ t.title }} &nbsp;|&nbsp; 📅 {{ t.scheduled_date }} &nbsp;|&nbsp; ⏰ {{ t.scheduled_time }}
+        </a>
+        {% endfor %}
+        {% for t in ticker_tests %}
+        <a href="{{ url_for('exam_calendar') }}" style="color:#ffd700;text-decoration:none;font-size:13px;font-weight:600;margin-right:60px;white-space:nowrap;">
+          📝 {{ t.title }} &nbsp;|&nbsp; 📅 {{ t.scheduled_date }} &nbsp;|&nbsp; ⏰ {{ t.scheduled_time }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.ticker-track:hover { animation-play-state: paused; }
+</style>
+{% endif %}
+
+<!-- FEATURED COURSES -->
+<section class="courses-section" id="featured-courses">
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">Our Courses</div>
+      <h2>Featured Courses</h2>
+      <p>Handpicked courses by our expert faculty for maximum success rate</p>
+    </div>
+    <div class="courses-grid">
+      {% for course in featured %}
+      {% include '_course_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CCMC INTRO STRIP -->
+<section class="ccmc-strip">
+  <div class="section-wrap" style="padding:40px 20px;">
+    <div class="ccmc-strip-inner">
+      <div class="ccmc-strip-icon">🎓</div>
+      <div class="ccmc-strip-text">
+        <h3>Knowledge & Study Centre</h3>
+        <p>Our Knowledge & Study Center is dedicated to empowering students with quality education and structured learning methods. We provide expert guidance, updated study materials, and a focused environment to help learners achieve their goals.</p>
+        <a href="{{ url_for('about') }}" class="ccmc-strip-link">Learn More →</a>
+      </div>
+      <div class="ccmc-strip-badge">
+        <span>🆓</span>
+        <strong>100% Free</strong>
+        <small>Government Program</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MY COURSES (shown only when logged in and enrolled) -->
+{% if current_user.is_authenticated and my_enrollments %}
+<section class="cat-section" style="background:#e8f5e9;">
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag" style="background:rgba(46,125,50,0.1);color:var(--green);">📚 Continue Learning</div>
+      <h2>My Enrolled Courses</h2>
+      <a href="{{ url_for('dashboard') }}" class="view-all">Go to Dashboard →</a>
+    </div>
+    <div class="courses-grid">
+      {% for e in my_enrollments %}
+      <div class="course-card" style="border-top:4px solid var(--green);">
+        <a href="{{ url_for('course_detail', course_id=e.course.id) }}">
+          <div class="course-thumb">
+            <img src="{{ e.course.thumbnail }}" alt="{{ e.course.title }}" loading="lazy"/>
+            <span class="cmode" style="background:var(--green);">Enrolled ✓</span>
+          </div>
+          <div class="course-body">
+            <div class="course-cat-tag">{{ e.course.category }}</div>
+            <h3>{{ e.course.title }}</h3>
+            <div class="course-meta">
+              <span><i class="fas fa-clock"></i> {{ e.course.duration }}</span>
+            </div>
+            <div class="course-price-row">
+              <span class="cprice free">🆓 Free — Government Program</span>
+            </div>
+          </div>
+        </a>
+        <div class="course-footer">
+          <a href="{{ url_for('course_detail', course_id=e.course.id) }}" class="btn-enroll enrolled">Continue Learning →</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% elif current_user.is_authenticated and not my_enrollments %}
+<!-- New logged-in user with no enrollments — prompt to pick a course -->
+<section style="background:linear-gradient(135deg,#e3f2fd,#f3e5f5);padding:32px 20px;" id="courses-section">
+  <div style="max-width:800px;margin:0 auto;text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">👋</div>
+    <h2 style="font-size:24px;font-weight:800;color:var(--primary);margin-bottom:8px;">Welcome, {{ current_user.name.split()[0] }}!</h2>
+    <p style="color:var(--text-muted);font-size:15px;margin-bottom:20px;">You're logged in. Now pick a course below to start your preparation — all courses are <strong>100% free</strong>.</p>
+    <a href="#featured-courses" style="background:var(--primary);color:#fff;padding:12px 28px;border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;">Browse Courses ↓</a>
+  </div>
+</section>
+{% endif %}
+
+<!-- TTP COURSE -->
+<section class="cat-section bg-light">
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">TTP</div>
+      <h2>TTP — Transformation Training Program</h2>
+      <a href="{{ url_for('courses_by_category', category='ttp') }}" class="view-all">View All →</a>
+    </div>
+    <div class="courses-grid">
+      {% for course in ttp[:3] %}
+      {% include '_course_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- TNPSC COURSES -->
+<section class="cat-section">
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">TNPSC</div>
+      <h2>TNPSC Courses</h2>
+      <a href="{{ url_for('courses_by_category', category='tnpsc') }}" class="view-all">View All →</a>
+    </div>
+    <div class="courses-grid">
+      {% for course in tnpsc[:3] %}
+      {% include '_course_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- RRB + SSC ROW -->
+<section class="cat-section bg-light">
+  <div class="section-wrap">
+    <div class="two-col-cats">
+      <div class="half-cat">
+        <div class="section-head">
+          <div class="section-tag">RRB</div>
+          <h2>Railway Courses</h2>
+          <a href="{{ url_for('courses_by_category', category='rrb') }}" class="view-all">View All →</a>
+        </div>
+        <div class="courses-list">
+          {% for course in rrb %}
+          <a href="{{ url_for('course_detail', course_id=course.id) }}" class="course-list-item">
+            <div class="cli-info">
+              {% if course.badge %}<span class="cbadge cbadge-{{ course.badge|lower|replace(' ','-') }}">{{ course.badge }}</span>{% endif %}
+              <strong>{{ course.title }}</strong>
+              <span>{{ course.duration }} · {{ course.mode }}</span>
+            </div>
+            <div class="cli-price free-tag">FREE</div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="half-cat">
+        <div class="section-head">
+          <div class="section-tag">SSC</div>
+          <h2>SSC Courses</h2>
+          <a href="{{ url_for('courses_by_category', category='ssc') }}" class="view-all">View All →</a>
+        </div>
+        <div class="courses-list">
+          {% for course in ssc %}
+          <a href="{{ url_for('course_detail', course_id=course.id) }}" class="course-list-item">
+            <div class="cli-info">
+              {% if course.badge %}<span class="cbadge cbadge-{{ course.badge|lower|replace(' ','-') }}">{{ course.badge }}</span>{% endif %}
+              <strong>{{ course.title }}</strong>
+              <span>{{ course.duration }} · {{ course.mode }}</span>
+            </div>
+            <div class="cli-price free-tag">FREE</div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BANKING COURSES -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BANKING COURSES -->
+<section class="cat-section">
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">Banking</div>
+      <h2>Banking & Finance Courses</h2>
+      <a href="{{ url_for('courses_by_category', category='banking') }}" class="view-all">View All →</a>
+    </div>
+    <div class="courses-grid">
+      {% for course in banking[:3] %}
+      {% include '_course_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- WHY CHOOSE US -->
+<section class="why-section">
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">Why CCMC?</div>
+      <h2>Why Choose CCMC?</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+        <h4>Expert Faculty</h4>
+        <p>Learn from IAS/IPS officers and subject matter experts with 10+ years of teaching experience.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-book-open"></i></div>
+        <h4>Comprehensive Study Material</h4>
+        <p>Exclusive printed and digital study material updated with latest syllabus and current affairs.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-clipboard-check"></i></div>
+        <h4>Regular Test Series</h4>
+        <p>Weekly tests, mock exams, and detailed performance analytics to track your progress.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-users"></i></div>
+        <h4>Personal Mentorship</h4>
+        <p>One-on-one guidance from experienced mentors throughout your preparation journey.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-laptop"></i></div>
+        <h4>Online + Offline</h4>
+        <p>Flexible learning with both classroom and online modes. Learn at your own pace.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><i class="fas fa-trophy"></i></div>
+        <h4>Proven Track Record</h4>
+        <p>500+ selections in UPSC, TNPSC, and other competitive exams since 2011.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOPPERS / RESULTS -->
+<section class="toppers-section">
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">Our Results</div>
+      <h2>Our Proud Achievers</h2>
+      <p>Students who cracked their dream exams with CCMC</p>
+    </div>
+    <div class="toppers-grid">
+      <div class="topper-card">
+        <div class="topper-avatar">A</div>
+        <div class="topper-name">Arjun Krishnan</div>
+        <div class="topper-rank">IAS — AIR 42</div>
+        <div class="topper-exam">UPSC CSE 2023</div>
+        <p>"CCMC's structured approach and dedicated faculty made my IAS dream a reality."</p>
+      </div>
+      <div class="topper-card">
+        <div class="topper-avatar">P</div>
+        <div class="topper-name">Priya Sundaram</div>
+        <div class="topper-rank">Deputy Collector</div>
+        <div class="topper-exam">TNPSC Group 1 2023</div>
+        <p>"The test series and current affairs material at CCMC is unmatched in Tamil Nadu."</p>
+      </div>
+      <div class="topper-card">
+        <div class="topper-avatar">R</div>
+        <div class="topper-name">Rahul Murugan</div>
+        <div class="topper-rank">RRB NTPC — Rank 12</div>
+        <div class="topper-exam">RRB NTPC 2023</div>
+        <p>"Cleared RRB NTPC in first attempt. The mock tests were exactly like the real exam."</p>
+      </div>
+      <div class="topper-card">
+        <div class="topper-avatar">S</div>
+        <div class="topper-name">Sneha Rajan</div>
+        <div class="topper-rank">SBI PO</div>
+        <div class="topper-exam">SBI PO 2023</div>
+        <p>"Banking course at CCMC covered everything. Got selected in my second attempt."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section bg-light">
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">Testimonials</div>
+      <h2>What Our Students Say</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="t-card">
+        <div class="t-stars">★★★★★</div>
+        <p>"Best coaching institute in Chennai for UPSC. The faculty is extremely knowledgeable and the study material is comprehensive."</p>
+        <div class="t-author"><div class="t-av">K</div><div><strong>Karthik Selvam</strong><small>UPSC Aspirant, Chennai</small></div></div>
+      </div>
+      <div class="t-card">
+        <div class="t-stars">★★★★★</div>
+        <p>"TNPSC Group 2 cleared in first attempt! The test series and answer writing practice sessions were extremely helpful."</p>
+        <div class="t-author"><div class="t-av">M</div><div><strong>Meena Devi</strong><small>TNPSC Group 2 Selected</small></div></div>
+      </div>
+      <div class="t-card">
+        <div class="t-stars">★★★★★</div>
+        <p>"Online classes are very interactive. Even from Madurai I could access quality coaching. Highly recommend CCMC."</p>
+        <div class="t-author"><div class="t-av">V</div><div><strong>Vijay Kumar</strong><small>SSC CGL Selected</small></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <div class="cta-text">
+      <h2>Ready to Start Your Preparation?</h2>
+      <p>Talk to our expert counsellors today. Free guidance session available.</p>
+    </div>
+    <div class="cta-actions">
+      <button onclick="openModal('enquiryModal')" class="btn-cta-white">Enquire Now</button>
+      <a href="https://api.whatsapp.com/send/?phone=91916385837858&text=Hi%2C+I+want+to+know+more+about+your+courses" 
+         target="_blank" class="btn-cta-green"><i class="fab fa-whatsapp"></i> WhatsApp Us</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Hero slider
+let currentSlide = 0;
+const slides = document.querySelectorAll('.hero-slide');
+const dots = document.querySelectorAll('.dot');
+function showSlide(n) {
+  slides[currentSlide].classList.remove('active');
+  dots[currentSlide].classList.remove('active');
+  currentSlide = (n + slides.length) % slides.length;
+  slides[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+}
+function changeSlide(dir) { showSlide(currentSlide + dir); }
+function goSlide(n) { showSlide(n); }
+setInterval(() => changeSlide(1), 5000);
+</script>
+{% endblock %}

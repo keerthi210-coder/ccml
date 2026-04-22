@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Test Result — {{ test.title }}{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner"><h1>Test Result</h1><p>{{ test.title }}</p></div>
+</div>
+<div style="max-width:700px;margin:40px auto;padding:0 20px;">
+  <!-- Score Card -->
+  <div style="background:#fff;border-radius:16px;box-shadow:var(--shadow-hover);padding:40px;text-align:center;margin-bottom:24px;">
+    <div style="font-size:64px;margin-bottom:8px;">
+      {% set pct = (attempt.score / attempt.total_marks * 100)|int if attempt.total_marks > 0 else 0 %}
+      {% if pct >= 80 %}🏆{% elif pct >= 60 %}🎯{% elif pct >= 40 %}📚{% else %}💪{% endif %}
+    </div>
+    <h2 style="font-size:28px;font-weight:800;margin-bottom:4px;">{{ attempt.score }} / {{ attempt.total_marks }}</h2>
+    <div style="font-size:48px;font-weight:800;color:{% if pct >= 60 %}var(--green){% else %}var(--accent){% endif %};">{{ pct }}%</div>
+    <p style="color:var(--text-muted);margin-top:8px;">
+      {% if pct >= 80 %}Excellent! Outstanding performance!
+      {% elif pct >= 60 %}Good job! Keep it up!
+      {% elif pct >= 40 %}Average. More practice needed.
+      {% else %}Keep studying. You can do better!{% endif %}
+    </p>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+    <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:20px;text-align:center;border-top:4px solid var(--green);">
+      <div style="font-size:24px;font-weight:800;color:var(--green);">{{ attempt.correct_count }}</div>
+      <div style="font-size:12px;color:var(--text-muted);">Correct</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:20px;text-align:center;border-top:4px solid var(--accent);">
+      <div style="font-size:24px;font-weight:800;color:var(--accent);">{{ attempt.wrong_count }}</div>
+      <div style="font-size:12px;color:var(--text-muted);">Wrong</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:20px;text-align:center;border-top:4px solid var(--primary);">
+      <div style="font-size:24px;font-weight:800;color:var(--primary);">{{ rank }}</div>
+      <div style="font-size:12px;color:var(--text-muted);">Your Rank</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:20px;text-align:center;border-top:4px solid var(--gold);">
+      <div style="font-size:24px;font-weight:800;color:var(--gold);">{{ '%d:%02d'|format(attempt.time_taken // 60, attempt.time_taken % 60) }}</div>
+      <div style="font-size:12px;color:var(--text-muted);">Time Taken</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="{{ url_for('test_leaderboard', test_id=test.id) }}" class="btn-enroll" style="text-decoration:none;">🏆 View Leaderboard</a>
+    <button onclick="downloadReport()" class="btn-enquire-sm">📥 Download Report</button>
+    <a href="{{ url_for('dashboard') }}" class="btn-enquire-sm" style="text-decoration:none;">← Back to Dashboard</a>
+  </div>
+
+  {% if attempt.retake_after %}
+  <div style="text-align:center;margin-top:20px;background:#fff3e0;border-radius:10px;padding:16px;max-width:700px;margin:20px auto 0;">
+    <i class="fas fa-clock" style="color:var(--gold);"></i>
+    <strong> Retake available after:</strong> {{ attempt.retake_after.strftime('%d %b %Y') }}
+    <span style="font-size:12px;color:var(--text-muted);display:block;margin-top:4px;">You can retake this test 1 week after your attempt.</span>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function downloadReport() {
+  const lines = [
+    'CCMC — Test Report',
+    '==================',
+    'Student: {{ current_user.name }}',
+    'Test: {{ test.title }}',
+    'Date: {{ attempt.submitted_at.strftime("%d %b %Y") }}',
+    '',
+    'SCORE: {{ attempt.score }} / {{ attempt.total_marks }}',
+    'PERCENTAGE: {{ (attempt.score/attempt.total_marks*100)|int if attempt.total_marks > 0 else 0 }}%',
+    'RANK: {{ rank }} of {{ total_attempts }}',
+    '',
+    'Correct Answers: {{ attempt.correct_count }}',
+    'Wrong Answers: {{ attempt.wrong_count }}',
+    'Time Taken: {{ "%d:%02d"|format(attempt.time_taken//60, attempt.time_taken%60) }}',
+    '',
+    'Retake Available: {{ attempt.retake_after.strftime("%d %b %Y") if attempt.retake_after else "N/A" }}',
+    '',
+    '--',
+    'CCMC Knowledge & Study Centre',
+    'Addis St, Gopalapuram, Coimbatore 641018',
+    'Phone: 6385837858'
+  ];
+  const blob = new Blob([lines.join('\n')], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'CCMC_Test_Report.txt';
+  a.click();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.title }} — CCMC{% endblock %}
+{% block content %}
+
+<div class="page-banner">
+  <div class="pb-inner">
+    <div class="breadcrumb"><a href="{{ url_for('index') }}">Home</a> › <a href="{{ url_for('courses_by_category', category=course.category) }}">{{ course.category }}</a> › {{ course.title }}</div>
+    <h1>{{ course.title }}</h1>
+    <div class="cd-meta-top">
+      <span class="cmode-tag">{{ course.mode }}</span>
+      <span><i class="fas fa-clock"></i> {{ course.duration }}</span>
+      <span><i class="fas fa-book"></i> {{ course.lessons }} lessons</span>
+    </div>
+  </div>
+</div>
+
+<div class="cd-layout-wrap">
+  <div class="cd-main">
+    <div class="cd-section">
+      <h2>Course Overview</h2>
+      <p>{{ course.description }}</p>
+      {% if course.youtube_url %}
+      <div class="yt-embed-wrap">
+        <iframe src="{{ course.youtube_url }}" title="{{ course.title }}" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      </div>
+      {% endif %}
+    </div>
+    <div class="cd-section">
+      <h2>What You'll Learn</h2>
+      <div class="learn-grid">
+        <div class="learn-item"><i class="fas fa-check"></i> Complete syllabus coverage with structured study plan</div>
+        <div class="learn-item"><i class="fas fa-check"></i> Previous year question analysis and practice</div>
+        <div class="learn-item"><i class="fas fa-check"></i> Regular mock tests with detailed solutions</div>
+        <div class="learn-item"><i class="fas fa-check"></i> Current affairs and static GK integration</div>
+        <div class="learn-item"><i class="fas fa-check"></i> Answer writing and interview preparation</div>
+        <div class="learn-item"><i class="fas fa-check"></i> Exclusive study material and notes</div>
+      </div>
+    </div>
+    <div class="cd-section">
+      <h2>Course Highlights</h2>
+      <div class="highlights-grid">
+        <div class="highlight-item"><i class="fas fa-chalkboard-teacher"></i><span>Expert Faculty</span></div>
+        <div class="highlight-item"><i class="fas fa-file-alt"></i><span>Study Material</span></div>
+        <div class="highlight-item"><i class="fas fa-clipboard-list"></i><span>Test Series</span></div>
+        <div class="highlight-item"><i class="fas fa-comments"></i><span>Doubt Sessions</span></div>
+        <div class="highlight-item"><i class="fas fa-video"></i><span>Recorded Classes</span></div>
+        <div class="highlight-item"><i class="fas fa-certificate"></i><span>Certificate</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cd-sidebar">
+    <div class="cd-purchase-card">
+      <img src="{{ course.thumbnail }}" alt="{{ course.title }}" class="cd-thumb"/>
+      <div class="cd-price-block">
+        <span class="cprice big free">🆓 Free — Government Program</span>
+      </div>
+
+      {% if is_enrolled %}
+        <a href="{{ url_for('dashboard') }}" class="btn-buy enrolled-btn">✓ Go to My Courses</a>
+      {% elif course.mode == 'Offline' %}
+        <div style="background:#e8f5e9;border-radius:8px;padding:14px;text-align:center;margin-bottom:10px;">
+          <div style="font-size:20px;margin-bottom:6px;">🏫</div>
+          <strong style="color:var(--green);font-size:14px;">Offline Program Only</strong>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">Visit our centre to enroll in this program</p>
+        </div>
+        <button class="btn-buy" style="background:var(--green);" onclick="openModal('enquiryModal')">Enquire to Join</button>
+      {% elif current_user.is_authenticated %}
+        {% if current_user.enrollments|length > 0 %}
+          <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;font-size:12px;color:#e65100;margin-bottom:10px;">
+            ⚠️ You are already enrolled in another course. Only one course per account is allowed.
+          </div>
+          <a href="{{ url_for('dashboard') }}" class="btn-buy" style="background:var(--green);text-align:center;">Go to My Enrolled Course</a>
+        {% else %}
+          <button class="btn-buy" onclick="initPayment({{ course.id }}, 0, '{{ course.title }}')">Enroll Now — Free</button>
+        {% endif %}
+      {% else %}
+        <button class="btn-buy" onclick="openModal('portalModal')">Sign Up to Enroll</button>
+      {% endif %}
+
+      <button class="btn-enquire-full" onclick="openModal('enquiryModal')"><i class="fas fa-paper-plane"></i> Enquire About This Course</button>
+
+      {% if is_enrolled %}
+      <a href="{{ url_for('course_videos', course_id=course.id) }}" class="btn-enquire-full" style="background:var(--green);color:#fff;border-color:var(--green);margin-bottom:0;">
+        <i class="fas fa-video"></i> Watch Recorded Classes
+      </a>
+      {% endif %}
+
+      <div class="cd-includes">
+        <h4>This course includes:</h4>
+        <ul>
+          <li><i class="fas fa-clock"></i> {{ course.duration }} of content</li>
+          <li><i class="fas fa-book"></i> {{ course.lessons }} lessons</li>
+          <li><i class="fas fa-file-download"></i> Downloadable study material</li>
+          <li><i class="fas fa-mobile-alt"></i> Mobile & desktop access</li>
+          <li><i class="fas fa-infinity"></i> Lifetime access</li>
+          <li><i class="fas fa-certificate"></i> Certificate of completion</li>
+        </ul>
+      </div>
+      <div class="cd-guarantee"><i class="fas fa-check-circle"></i> Government Certified Free Program</div>
+      <div class="cd-payment-icons">
+        <span>UPI</span><span>Cards</span><span>Net Banking</span><span>Wallets</span>
+      </div>
+    </div>
+
+    <div class="cd-contact-card">
+      <h4><i class="fas fa-headset"></i> Need Help?</h4>
+      <p>Talk to our counsellors for free guidance</p>
+      <a href="https://api.whatsapp.com/send/?phone=91916385837858" target="_blank" class="btn-whatsapp-sm">
+        <i class="fab fa-whatsapp"></i> WhatsApp Now
+      </a>
+      <a href="tel:+916385837858" class="btn-call-sm"><i class="fas fa-phone"></i> 6385837858</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function initPayment(courseId, amount, title) {
+  if (amount === 0) {
+    fetch(`/create-order/${courseId}`, {method:'POST'})
+      .then(r => r.json()).then(d => {
+        if (d.demo || d.success) { alert('✅ Enrolled successfully!'); window.location.href = '/dashboard'; }
+      });
+    return;
+  }
+  fetch(`/create-order/${courseId}`, {method:'POST'})
+    .then(r => r.json()).then(data => {
+      if (data.demo) { alert('✅ Enrolled in demo mode!'); window.location.href = '/dashboard'; return; }
+      if (data.error) { alert(data.error); return; }
+      const options = {
+        key: data.key, amount: data.amount, currency: 'INR',
+        name: 'CCMC', description: title, order_id: data.order_id,
+        handler: function(response) {
+          fetch('/verify-payment', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({course_id: courseId, razorpay_payment_id: response.razorpay_payment_id})
+          }).then(() => { alert('🎉 Enrollment successful!'); window.location.href = '/dashboard'; });
+        },
+        theme: { color: '#1a237e' }
+      };
+      new Razorpay(options).open();
+    });
+}
+// Countdown timer
+const t = document.getElementById('offerTimer');
+if (t) {
+  let s = 23*3600+59*60+59;
+  setInterval(() => {
+    s--;
+    t.textContent = [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(n=>String(n).padStart(2,'0')).join(':');
+  }, 1000);
+}
+</script>
+{% endblock %}

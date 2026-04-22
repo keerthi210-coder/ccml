@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard — CCMC{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner">
+    <h1>My Dashboard</h1>
+    <p>Welcome back, {{ current_user.name }}!</p>
+  </div>
+</div>
+<div class="dashboard-wrap">
+
+  <!-- STATS — only enrolled course count and test stats -->
+  <div class="dash-stats">
+    <div class="dash-stat"><i class="fas fa-book-open"></i><strong>{{ enrollments|length }}</strong><span>My Courses</span></div>
+    <div class="dash-stat"><i class="fas fa-clipboard-check"></i><strong>{{ my_attempts|length }}</strong><span>Tests Attempted</span></div>
+    <div class="dash-stat"><i class="fas fa-tasks"></i><strong>{{ tests|length }}</strong><span>Tests Available</span></div>
+    <div class="dash-stat"><i class="fas fa-trophy"></i>
+      <strong>
+        {% set total_score = my_attempts.values()|map(attribute='score')|sum %}
+        {% set total_marks = my_attempts.values()|map(attribute='total_marks')|sum %}
+        {% if total_marks > 0 %}{{ (total_score / total_marks * 100)|int }}%{% else %}—{% endif %}
+      </strong>
+      <span>Avg Score</span>
+    </div>
+  </div>
+
+  {% if not enrollments %}
+  <!-- NOT ENROLLED YET -->
+  <div class="empty-state">
+    <i class="fas fa-book-open"></i>
+    <h3>You haven't enrolled in any course yet</h3>
+    <p>Browse our courses and enroll to access study material and tests.</p>
+    <a href="{{ url_for('index') }}" class="btn-enroll">Browse Courses</a>
+  </div>
+
+  {% else %}
+
+  <!-- MY ENROLLED COURSES -->
+  <div class="dash-section">
+    <h2>My Enrolled Courses</h2>
+    <div class="courses-grid">
+      {% for e in enrollments %}
+      <div class="course-card">
+        <a href="{{ url_for('course_detail', course_id=e.course.id) }}">
+          <div class="course-thumb">
+            <img src="{{ e.course.thumbnail }}" alt="{{ e.course.title }}" loading="lazy"/>
+            <span class="cmode">{{ e.course.mode }}</span>
+          </div>
+          <div class="course-body">
+            <div class="course-cat-tag">{{ e.course.category }}</div>
+            <h3>{{ e.course.title }}</h3>
+            <div class="course-meta">
+              <span><i class="fas fa-clock"></i> {{ e.course.duration }}</span>
+              <span><i class="fas fa-calendar"></i> Enrolled {{ e.enrolled_at.strftime('%d %b %Y') }}</span>
+            </div>
+          </div>
+        </a>
+        <div class="course-footer">
+          <a href="{{ url_for('course_detail', course_id=e.course.id) }}" class="btn-enroll enrolled">Continue Learning</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- UPCOMING EXAM NOTIFICATIONS -->
+  {% if upcoming_tests %}
+  <div class="dash-section" style="border-left:4px solid #ffd700;background:linear-gradient(135deg,#fffde7,#fff8e1);">
+    <h2 style="color:#f57f17;">🔔 Upcoming Exams</h2>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      {% for t in upcoming_tests %}
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:8px;padding:12px 16px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <strong style="font-size:14px;">{{ t.title }}</strong>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+            📅 {{ t.scheduled_date }} &nbsp;|&nbsp; ⏰ {{ t.scheduled_time }} &nbsp;|&nbsp; ⏱ {{ t.duration_mins }} mins
+          </div>
+        </div>
+        <a href="{{ url_for('exam_calendar') }}" style="font-size:12px;background:var(--primary);color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;">View</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- TESTS — only for enrolled courses + global tests -->
+  <div class="dash-section">
+    <h2>My Tests</h2>
+    {% if tests %}
+
+    <!-- Demo/Global test banner if present -->
+    {% for test in tests %}
+    {% set attempt = my_attempts.get(test.id) %}
+    {% if test.is_global and 'Demo' in test.title %}
+    <div class="demo-test-banner" style="margin-bottom:20px;">
+      <div class="demo-test-left">
+        <span class="demo-badge">🎯 General Test</span>
+        <h3>{{ test.title }}</h3>
+        <p>{{ test.description }}</p>
+        <div class="test-info-row" style="margin-top:8px;">
+          <span><i class="fas fa-question-circle"></i> {{ test.questions|length }} Questions</span>
+          <span><i class="fas fa-clock"></i> {{ test.duration_mins }} Minutes</span>
+        </div>
+      </div>
+      <div class="demo-test-right">
+        {% if attempt %}
+          <div style="text-align:center;margin-bottom:12px;">
+            <div style="font-size:28px;font-weight:800;color:var(--primary);">{{ attempt.score }}/{{ attempt.total_marks }}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.8);">Your Score</div>
+          </div>
+          <a href="{{ url_for('test_result', test_id=test.id) }}" class="btn-enroll enrolled" style="display:block;text-align:center;margin-bottom:8px;">View Result</a>
+          <a href="{{ url_for('test_leaderboard', test_id=test.id) }}" class="btn-enquire-sm" style="display:block;text-align:center;color:#fff;border-color:rgba(255,255,255,0.5);">🏆 Leaderboard</a>
+        {% else %}
+          <a href="{{ url_for('take_test', test_id=test.id) }}" class="btn-enroll" style="display:block;text-align:center;font-size:15px;padding:13px;">Start Test →</a>
+          <div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.7);margin-top:6px;">⏱ {{ test.duration_mins }} min time limit</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    <!-- Course-specific tests -->
+    {% set course_tests = tests | selectattr('is_global', 'equalto', false) | list %}
+    {% if course_tests %}
+    <div class="tests-grid">
+      {% for test in course_tests %}
+      {% set attempt = my_attempts.get(test.id) %}
+      <div class="test-card">
+        <div class="test-card-header">
+          <div class="test-icon">📝</div>
+          <div class="test-meta">
+            <span class="cat-pill">{{ test.course.category if test.course else '' }}</span>
+            {% if attempt %}<span class="test-done-badge">✓ Attempted</span>{% endif %}
+          </div>
+        </div>
+        <h3>{{ test.title }}</h3>
+        {% if test.description %}<p>{{ test.description }}</p>{% endif %}
+        <div class="test-info-row">
+          <span><i class="fas fa-question-circle"></i> {{ test.questions|length }} Questions</span>
+          <span><i class="fas fa-clock"></i> {{ test.duration_mins }} mins</span>
+        </div>
+        {% if attempt %}
+          <div class="test-score-row">
+            <div class="score-pill">{{ attempt.score }}/{{ attempt.total_marks }} — {{ (attempt.score/attempt.total_marks*100)|int if attempt.total_marks > 0 else 0 }}%</div>
+          </div>
+          <div class="test-card-actions">
+            <a href="{{ url_for('test_result', test_id=test.id) }}" class="btn-enroll enrolled">View Result</a>
+            <a href="{{ url_for('test_leaderboard', test_id=test.id) }}" class="btn-enquire-sm">🏆 Leaderboard</a>
+          </div>
+        {% else %}
+          {% if attempt and attempt.retake_after and attempt.retake_after > now %}
+          <div style="font-size:12px;color:var(--accent);padding:8px 0;">
+            🔒 Retake available {{ attempt.retake_after.strftime('%d %b %Y') }}
+          </div>
+          {% else %}
+          <div class="test-card-actions">
+            <a href="{{ url_for('take_test', test_id=test.id) }}" class="btn-enroll">Start Test →</a>
+          </div>
+          {% endif %}
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state" style="padding:40px 20px;">
+      <i class="fas fa-clipboard-list"></i>
+      <h3>No tests available yet</h3>
+      <p>Tests for your enrolled courses will appear here once your instructor creates them.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {% endif %}
+</div>
+{% endblock %}

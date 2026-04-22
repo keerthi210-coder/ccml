@@ -1,0 +1,151 @@
+{% extends 'admin_base.html' %}
+{% block title %}Create Test — CCMC{% endblock %}
+{% block nav_create_test %}active{% endblock %}
+{% block admin_head %}
+<style>
+.question-block { background: var(--bg-light); border: 1.5px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; position: relative; }
+.question-block .q-num { font-weight: 800; color: var(--primary); margin-bottom: 12px; font-size: 15px; }
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.option-row { display: flex; align-items: center; gap: 8px; }
+.option-label { font-weight: 700; color: var(--primary); min-width: 20px; }
+.remove-q { position: absolute; top: 12px; right: 12px; background: #ffebee; color: var(--accent); border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.add-q-btn { background: var(--bg-light); border: 2px dashed var(--primary); color: var(--primary); width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .2s; }
+.add-q-btn:hover { background: rgba(26,35,126,0.05); }
+</style>
+{% endblock %}
+{% block admin_content %}
+<div style="padding-bottom:16px;margin-bottom:20px;border-bottom:2px solid var(--border);">
+  <h1 style="font-size:22px;font-weight:800;color:var(--primary);margin:0;">Create New Test</h1>
+</div>
+</div>
+<div class="admin-wrap">
+  <form method="POST" action="{{ url_for('admin_create_test') }}" id="testForm">
+    <div class="admin-section">
+      <h2>Test Details</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Test Title *</label>
+          <input type="text" name="title" placeholder="e.g. UPSC Prelims Mock Test 1" required/>
+        </div>
+        <div class="form-group">
+          <label>Assign to Course <span style="color:var(--text-muted);font-weight:400;">(leave blank for Global Test — visible to all students)</span></label>
+          <select name="course_id">
+            <option value="">🌐 Global Test — All Students</option>
+            {% for c in courses %}
+            <option value="{{ c.id }}">{{ c.category }} — {{ c.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" name="description" placeholder="Brief description of this test"/>
+        </div>
+        <div class="form-group">
+          <label>Duration (minutes) *</label>
+          <input type="number" name="duration_mins" value="30" min="5" max="180" required/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Scheduled Date <small style="color:var(--text-muted);">(leave blank for unscheduled)</small></label>
+          <input type="date" name="scheduled_date" id="scheduled_date"/>
+          <small style="color:var(--text-muted);font-size:11px;">Exams are conducted every Saturday</small>
+        </div>
+        <div class="form-group">
+          <label>Scheduled Time</label>
+          <input type="time" name="scheduled_time" value="10:00"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h2>Questions</h2>
+      <div id="questionsContainer"></div>
+      <button type="button" class="add-q-btn" onclick="addQuestion()">+ Add Question</button>
+    </div>
+
+    <div class="admin-section" style="text-align:right;">
+      <a href="{{ url_for('admin_tests') }}" style="margin-right:16px;color:var(--text-muted);">Cancel</a>
+      <button type="submit" class="btn-modal-submit" style="width:auto;padding:12px 32px;">Create Test</button>
+    </div>
+  </form>
+{% endblock %}
+{% block scripts %}
+<script>
+let qCount = 0;
+function addQuestion() {
+  qCount++;
+  const container = document.getElementById('questionsContainer');
+  const div = document.createElement('div');
+  div.className = 'question-block';
+  div.id = `q${qCount}`;
+  div.innerHTML = `
+    <div class="q-num">Question ${qCount}</div>
+    <button type="button" class="remove-q" onclick="removeQ('q${qCount}')">✕ Remove</button>
+    <div class="form-group">
+      <label>Question Text *</label>
+      <textarea name="q_text[]" rows="2" placeholder="Enter your question here..." required></textarea>
+    </div>
+    <div class="options-grid">
+      <div class="form-group">
+        <label><span class="option-label">A.</span> Option A *</label>
+        <input type="text" name="q_a[]" placeholder="Option A" required/>
+      </div>
+      <div class="form-group">
+        <label><span class="option-label">B.</span> Option B *</label>
+        <input type="text" name="q_b[]" placeholder="Option B" required/>
+      </div>
+      <div class="form-group">
+        <label><span class="option-label">C.</span> Option C *</label>
+        <input type="text" name="q_c[]" placeholder="Option C" required/>
+      </div>
+      <div class="form-group">
+        <label><span class="option-label">D.</span> Option D *</label>
+        <input type="text" name="q_d[]" placeholder="Option D" required/>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:10px;">
+      <div class="form-group">
+        <label>Correct Answer *</label>
+        <select name="q_correct[]" required>
+          <option value="">Select</option>
+          <option value="A">A</option><option value="B">B</option>
+          <option value="C">C</option><option value="D">D</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Marks</label>
+        <input type="number" name="q_marks[]" value="1" min="1" max="10"/>
+      </div>
+    </div>`;
+  container.appendChild(div);
+}
+function removeQ(id) {
+  document.getElementById(id).remove();
+}
+// Start with 3 questions
+addQuestion(); addQuestion(); addQuestion();
+
+// Auto-set next Saturday
+const dateEl = document.getElementById('scheduled_date');
+if (dateEl) {
+  const today = new Date();
+  const daysUntilSat = (6 - today.getDay() + 7) % 7 || 7;
+  const nextSat = new Date(today);
+  nextSat.setDate(today.getDate() + daysUntilSat);
+  dateEl.value = nextSat.toISOString().split('T')[0];
+  dateEl.addEventListener('change', function() {
+    const d = new Date(this.value);
+    if (d.getDay() !== 6) {
+      this.style.borderColor = 'var(--accent)';
+      this.title = 'Warning: Exams are usually on Saturdays';
+    } else {
+      this.style.borderColor = 'var(--green)';
+      this.title = '✓ Saturday';
+    }
+  });
+}
+</script>
+{% endblock %}

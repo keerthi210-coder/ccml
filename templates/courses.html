@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}{% if active_location %}{{ active_location.name }}{% else %}{{ category }}{% endif %} Courses — CCMC{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner">
+    <h1>{% if active_location %}{{ active_location.name }}{% else %}{{ category }} Courses{% endif %}</h1>
+    <div class="breadcrumb"><a href="{{ url_for('index') }}">Home</a> › Courses</div>
+  </div>
+</div>
+
+<section class="courses-section">
+  <div class="section-wrap">
+
+    <!-- Location filter tabs -->
+    {% if centres %}
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px;">
+      <a href="{{ url_for('courses_by_category', category=category) }}"
+         style="padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none;
+                {% if not active_location %}background:var(--primary);color:#fff;{% else %}background:var(--bg-light);color:var(--text);border:1.5px solid var(--border);{% endif %}">
+        All Locations
+      </a>
+      {% for loc in centres %}
+      <a href="{{ url_for('courses_by_location', slug=loc.slug) }}"
+         style="padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none;
+                {% if active_location and active_location.id == loc.id %}background:var(--primary);color:#fff;{% else %}background:var(--bg-light);color:var(--text);border:1.5px solid var(--border);{% endif %}">
+        {{ loc.name }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if courses %}
+    <div class="courses-grid">
+      {% for course in courses %}
+      {% include '_course_card.html' %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-book-open"></i>
+      <h3>No courses available{% if active_location %} at {{ active_location.name }}{% endif %}</h3>
+      <p>Check back soon or <button onclick="openModal('enquiryModal')" class="link-btn">enquire now</button> for upcoming batches.</p>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

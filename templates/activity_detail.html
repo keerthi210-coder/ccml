@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}{{ activity.name }} — CCMC Summer Camp{% endblock %}
+{% block content %}
+
+<div class="page-banner" style="background:linear-gradient(135deg,#e65100,#f57c00);">
+  <div class="pb-inner">
+    <div class="breadcrumb" style="color:rgba(255,255,255,0.8);">
+      <a href="{{ url_for('index') }}" style="color:rgba(255,255,255,0.8);">Home</a> ›
+      <a href="{{ url_for('summer_camp') }}" style="color:rgba(255,255,255,0.8);">Summer Camp</a> ›
+      {{ activity.name }}
+    </div>
+    <div style="font-size:56px;margin:12px 0;">{{ activity.icon }}</div>
+    <h1 style="color:#fff;">{{ activity.name }}</h1>
+    <p style="color:rgba(255,255,255,0.9);font-size:16px;">{{ activity.tagline }}</p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;">
+      {% if activity.age_group %}<span style="background:rgba(255,255,255,0.2);color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;">👶 Age: {{ activity.age_group }}</span>{% endif %}
+      {% if activity.duration %}<span style="background:rgba(255,255,255,0.2);color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;">⏱ {{ activity.duration }}</span>{% endif %}
+      <span style="background:rgba(255,255,255,0.2);color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;">🆓 Free Program</span>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:1000px;margin:0 auto;padding:40px 20px;">
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:40px;align-items:start;">
+
+    <div>
+      {% if activity.photos %}
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:28px;">
+        {% for photo in activity.photos %}
+        <div style="border-radius:10px;overflow:hidden;aspect-ratio:4/3;">
+          <img src="{{ photo.image_url }}" alt="{{ photo.caption or activity.name }}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />
+        </div>
+        {% endfor %}
+      </div>
+      {% elif activity.image_url %}
+      <img src="{{ activity.image_url }}" alt="{{ activity.name }}" style="width:100%;border-radius:12px;margin-bottom:28px;max-height:320px;object-fit:cover;" />
+      {% endif %}
+
+      <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:28px;margin-bottom:24px;">
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:14px;">About {{ activity.name }}</h2>
+        <p style="color:var(--text-muted);line-height:1.8;font-size:15px;">{{ activity.description }}</p>
+      </div>
+
+      {% if activity.benefits %}
+      <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:28px;">
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:16px;">What Your Child Will Gain</h2>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          {% for benefit in activity.benefits.split('\n') %}
+          {% if benefit.strip() %}
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px;">
+            <span style="color:var(--green);font-size:18px;">✅</span>
+            <span>{{ benefit.strip() }}</span>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- SIDEBAR -->
+    <div style="position:sticky;top:80px;display:flex;flex-direction:column;gap:16px;">
+      <div style="background:var(--primary);border-radius:12px;padding:24px;color:#fff;text-align:center;">
+        <div style="font-size:48px;margin-bottom:8px;">{{ activity.icon }}</div>
+        <h3 style="font-size:18px;font-weight:800;margin-bottom:4px;">{{ activity.name }}</h3>
+        <p style="opacity:.85;font-size:13px;margin-bottom:16px;">{{ activity.tagline }}</p>
+        <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:12px;margin-bottom:16px;">
+          <div style="font-size:22px;font-weight:800;color:var(--gold);">FREE</div>
+          <div style="font-size:12px;opacity:.8;">Government Program by CCMC</div>
+        </div>
+        <a href="{{ url_for('summer_camp') }}#register" style="display:block;background:var(--gold);color:#1a1a2e;padding:12px;border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;">Register Now</a>
+      </div>
+
+      <!-- Available at camps -->
+      <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:20px;">
+        <h4 style="font-size:15px;font-weight:700;margin-bottom:12px;">📍 Available At</h4>
+        {% for camp in camps %}
+        <div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <div style="font-weight:600;">{{ camp.title }}</div>
+          <div style="color:var(--text-muted);font-size:12px;margin-top:2px;">{{ camp.location }}</div>
+          {% if camp.start_date %}<div style="color:var(--primary);font-size:12px;margin-top:2px;">📅 {{ camp.start_date }} — {{ camp.end_date }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <a href="{{ url_for('summer_camp') }}" style="display:block;text-align:center;color:var(--primary);font-weight:600;font-size:14px;">← Back to Summer Camp</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

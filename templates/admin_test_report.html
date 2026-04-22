@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% block title %}Test Report — {{ test.title }}{% endblock %}
+{% block head %}
+<style>
+@media print {
+  .navbar, .topbar, .footer, .whatsapp-float, .no-print { display: none !important; }
+  body { background: #fff; }
+  .report-wrap { padding: 0; }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner">
+    <h1>📊 Test Report</h1>
+    <p>{{ test.title }}</p>
+    <div class="breadcrumb">
+      <a href="{{ url_for('admin') }}">Admin</a> ›
+      <a href="{{ url_for('admin_tests') }}">Tests</a> ›
+      Report
+    </div>
+  </div>
+</div>
+
+<div class="report-wrap" style="max-width:1100px;margin:0 auto;padding:32px 20px;">
+
+  <!-- SUMMARY CARDS -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:32px;" class="no-print">
+    <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:20px;text-align:center;border-top:4px solid var(--primary);">
+      <div style="font-size:32px;font-weight:800;color:var(--primary);">{{ attempts|length }}</div>
+      <div style="font-size:13px;color:var(--text-muted);">Total Attempts</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:20px;text-align:center;border-top:4px solid var(--green);">
+      <div style="font-size:32px;font-weight:800;color:var(--green);">
+        {% if attempts %}{{ (attempts|map(attribute='score')|sum / attempts|length)|round(1) }}{% else %}0{% endif %}
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);">Avg Score</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:20px;text-align:center;border-top:4px solid var(--gold);">
+      <div style="font-size:32px;font-weight:800;color:var(--gold);">
+        {% if attempts %}{{ attempts|map(attribute='score')|max }}{% else %}0{% endif %}
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);">Highest Score</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:20px;text-align:center;border-top:4px solid var(--accent);">
+      <div style="font-size:32px;font-weight:800;color:var(--accent);">
+        {% if attempts %}{{ attempts|map(attribute='score')|min }}{% else %}0{% endif %}
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);">Lowest Score</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:20px;text-align:center;border-top:4px solid #6c3483;">
+      <div style="font-size:32px;font-weight:800;color:#6c3483;">
+        {% if attempts %}
+          {% set pass_count = attempts|selectattr('score','ge', (attempts[0].total_marks * 0.4)|int)|list|length %}
+          {{ pass_count }}
+        {% else %}0{% endif %}
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);">Passed (≥40%)</div>
+    </div>
+  </div>
+
+  <!-- REPORT HEADER (for print) -->
+  <div style="display:none;" class="print-header" id="printHeader">
+    <div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #1a237e;padding-bottom:16px;">
+      <h2 style="color:#1a237e;margin:0;">🎓 CCMC — Test Report</h2>
+      <h3 style="margin:8px 0 4px;">{{ test.title }}</h3>
+      <p style="color:#666;font-size:13px;">Total Questions: {{ test.questions|length }} | Duration: {{ test.duration_mins }} mins | Total Attempts: {{ attempts|length }}</p>
+      <p style="color:#666;font-size:12px;">Generated on: {{ now.strftime('%d %b %Y %I:%M %p') }}</p>
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;" class="no-print">
+    <button onclick="downloadPDF()" style="background:var(--accent);color:#fff;border:none;padding:11px 24px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+      <i class="fas fa-file-pdf"></i> Download PDF Report
+    </button>
+    <button onclick="window.print()" style="background:var(--primary);color:#fff;border:none;padding:11px 24px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+      <i class="fas fa-print"></i> Print Report
+    </button>
+    <a href="{{ url_for('admin_tests') }}" style="background:transparent;border:1.5px solid var(--border);color:var(--text);padding:11px 24px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;display:flex;align-items:center;gap:8px;">
+      ← Back to Tests
+    </a>
+  </div>
+
+  <!-- FULL REPORT TABLE -->
+  <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;" id="reportTable">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h3 style="font-size:18px;font-weight:700;margin:0;">Student Results</h3>
+        <p style="font-size:13px;color:var(--text-muted);margin:4px 0 0;">{{ test.title }} — {{ attempts|length }} student(s) attempted</p>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);">
+        Total Marks: <strong>{{ attempts[0].total_marks if attempts else test.questions|length }}</strong>
+      </div>
+    </div>
+
+    {% if attempts %}
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;" id="resultsTable">
+        <thead>
+          <tr style="background:var(--bg-light);">
+            <th style="padding:12px 16px;text-align:left;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Rank</th>
+            <th style="padding:12px 16px;text-align:left;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Student Name</th>
+            <th style="padding:12px 16px;text-align:left;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Email</th>
+            <th style="padding:12px 16px;text-align:center;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Score</th>
+            <th style="padding:12px 16px;text-align:center;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Percentage</th>
+            <th style="padding:12px 16px;text-align:center;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Correct</th>
+            <th style="padding:12px 16px;text-align:center;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Wrong</th>
+            <th style="padding:12px 16px;text-align:center;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Time</th>
+            <th style="padding:12px 16px;text-align:center;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Status</th>
+            <th style="padding:12px 16px;text-align:left;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:2px solid var(--border);">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in attempts %}
+          {% set pct = (a.score / a.total_marks * 100)|int if a.total_marks > 0 else 0 %}
+          {% set passed = pct >= 40 %}
+          <tr style="border-bottom:1px solid var(--border);{% if loop.index <= 3 %}background:rgba(249,168,37,0.04);{% endif %}">
+            <td style="padding:12px 16px;font-weight:700;">
+              {% if loop.index == 1 %}🥇
+              {% elif loop.index == 2 %}🥈
+              {% elif loop.index == 3 %}🥉
+              {% else %}#{{ loop.index }}{% endif %}
+            </td>
+            <td style="padding:12px 16px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">{{ a.user.name[0].upper() }}</div>
+                <strong>{{ a.user.name }}</strong>
+              </div>
+            </td>
+            <td style="padding:12px 16px;color:var(--text-muted);font-size:12px;">{{ a.user.email }}</td>
+            <td style="padding:12px 16px;text-align:center;font-weight:800;font-size:15px;color:var(--primary);">{{ a.score }}/{{ a.total_marks }}</td>
+            <td style="padding:12px 16px;text-align:center;">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center;">
+                <div style="width:50px;background:var(--border);border-radius:4px;height:6px;">
+                  <div style="width:{{ pct }}%;background:{% if pct>=60 %}var(--green){% elif pct>=40 %}var(--gold){% else %}var(--accent){% endif %};height:6px;border-radius:4px;"></div>
+                </div>
+                <span style="font-weight:700;color:{% if pct>=60 %}var(--green){% elif pct>=40 %}var(--gold){% else %}var(--accent){% endif %};">{{ pct }}%</span>
+              </div>
+            </td>
+            <td style="padding:12px 16px;text-align:center;color:var(--green);font-weight:600;">{{ a.correct_count }}</td>
+            <td style="padding:12px 16px;text-align:center;color:var(--accent);font-weight:600;">{{ a.wrong_count }}</td>
+            <td style="padding:12px 16px;text-align:center;color:var(--text-muted);">{{ '%d:%02d'|format(a.time_taken//60, a.time_taken%60) }}</td>
+            <td style="padding:12px 16px;text-align:center;">
+              <span style="background:{% if passed %}#e8f5e9{% else %}#ffebee{% endif %};color:{% if passed %}var(--green){% else %}var(--accent){% endif %};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">
+                {% if passed %}✓ Pass{% else %}✗ Fail{% endif %}
+              </span>
+            </td>
+            <td style="padding:12px 16px;font-size:12px;color:var(--text-muted);">{{ a.submitted_at.strftime('%d %b %Y') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding:60px;text-align:center;color:var(--text-muted);">
+      <i class="fas fa-clipboard-list" style="font-size:48px;margin-bottom:16px;display:block;"></i>
+      <h3>No attempts yet</h3>
+      <p>Students haven't taken this test yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+// Show print header when printing
+window.addEventListener('beforeprint', () => {
+  document.getElementById('printHeader').style.display = 'block';
+});
+window.addEventListener('afterprint', () => {
+  document.getElementById('printHeader').style.display = 'none';
+});
+
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('l', 'mm', 'a4'); // landscape
+
+  // Header
+  doc.setFontSize(18);
+  doc.setTextColor(26, 35, 126);
+  doc.text('CCMC — Test Report', 14, 18);
+
+  doc.setFontSize(12);
+  doc.setTextColor(50, 50, 50);
+  doc.text('{{ test.title }}', 14, 26);
+
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 120);
+  doc.text('Total Questions: {{ test.questions|length }} | Duration: {{ test.duration_mins }} mins | Attempts: {{ attempts|length }}', 14, 32);
+  doc.text('Generated: ' + new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}), 14, 37);
+
+  // Table data
+  const headers = [['Rank','Student Name','Email','Score','%','Correct','Wrong','Time','Status','Date']];
+  const rows = [
+    {% for a in attempts %}
+    {% set pct = (a.score / a.total_marks * 100)|int if a.total_marks > 0 else 0 %}
+    ['#{{ loop.index }}', '{{ a.user.name }}', '{{ a.user.email }}', '{{ a.score }}/{{ a.total_marks }}', '{{ pct }}%', '{{ a.correct_count }}', '{{ a.wrong_count }}', '{{ "%d:%02d"|format(a.time_taken//60, a.time_taken%60) }}', '{% if pct >= 40 %}Pass{% else %}Fail{% endif %}', '{{ a.submitted_at.strftime("%d %b %Y") }}'],
+    {% endfor %}
+  ];
+
+  doc.autoTable({
+    head: headers,
+    body: rows,
+    startY: 42,
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [26, 35, 126], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [245, 247, 255] },
+    didParseCell: function(data) {
+      if (data.column.index === 8 && data.section === 'body') {
+        if (data.cell.raw === 'Pass') {
+          data.cell.styles.textColor = [46, 125, 50];
+          data.cell.styles.fontStyle = 'bold';
+        } else {
+          data.cell.styles.textColor = [229, 57, 53];
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    }
+  });
+
+  // Footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text('CCMC Knowledge & Study Centre, Coimbatore | Page ' + i + ' of ' + pageCount, 14, doc.internal.pageSize.height - 8);
+  }
+
+  doc.save('CCMC_Test_Report_{{ test.title|replace(" ","_") }}.pdf');
+}
+</script>
+{% endblock %}

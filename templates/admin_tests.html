@@ -1,0 +1,59 @@
+{% extends 'admin_base.html' %}
+{% block title %}Manage Tests — CCMC{% endblock %}
+{% block nav_tests %}active{% endblock %}
+{% block admin_content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--border);">
+  <h1 style="font-size:22px;font-weight:800;color:var(--primary);margin:0;">Manage Tests</h1>
+  <a href="{{ url_for('admin_create_test') }}" class="btn-modal-submit" style="width:auto;padding:10px 24px;text-decoration:none;">+ Create New Test</a>
+</div>
+<div class="admin-section">
+    {% if tests %}
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr><th>Title</th><th>Course</th><th>Questions</th><th>Duration</th><th>Scheduled</th><th>Attempts</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for test in tests %}
+          {% set today = now.strftime('%Y-%m-%d') if now else '' %}
+          {% set is_finished = test.attempts|length > 0 and test.scheduled_date and test.scheduled_date < today %}
+          <tr style="{% if is_finished %}opacity:.7;{% endif %}">
+            <td><strong>{{ test.title }}</strong></td>
+            <td><span class="cat-pill">{{ test.course.category if test.course else '—' }}</span></td>
+            <td>{{ test.questions|length }} Qs</td>
+            <td>{{ test.duration_mins }} mins</td>
+            <td style="font-size:12px;">{% if test.scheduled_date %}📅 {{ test.scheduled_date }}<br>⏰ {{ test.scheduled_time }}{% else %}—{% endif %}</td>
+            <td>{{ test.attempts|length }}</td>
+            <td>
+              {% if is_finished %}
+                <span style="color:#e65100;font-weight:600;font-size:12px;">Finished</span>
+              {% elif test.is_active %}
+                <span style="color:var(--green);font-weight:600;">Active</span>
+              {% else %}
+                <span style="color:var(--text-muted);">Inactive</span>
+              {% endif %}
+            </td>
+            <td style="display:flex;gap:8px;flex-wrap:wrap;">
+              {% if not is_finished %}
+              <a href="{{ url_for('admin_edit_test', test_id=test.id) }}" class="btn-enroll" style="font-size:12px;padding:6px 12px;text-decoration:none;">✏️ Edit</a>
+              {% endif %}
+              <a href="{{ url_for('admin_test_report', test_id=test.id) }}" class="btn-enroll" style="font-size:12px;padding:6px 12px;text-decoration:none;">📊 Report</a>
+              <a href="{{ url_for('admin_leaderboard', test_id=test.id) }}" class="btn-enquire-sm" style="font-size:12px;padding:6px 12px;text-decoration:none;">🏆 Board</a>
+              <form method="POST" action="{{ url_for('admin_delete_test', test_id=test.id) }}" onsubmit="return confirm('Delete this test?')">
+                <button type="submit" class="btn-delete">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-clipboard-list"></i>
+      <h3>No tests created yet</h3>
+      <p><a href="{{ url_for('admin_create_test') }}" style="color:var(--primary);font-weight:600;">Create your first test</a></p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'admin_base.html' %}
+{% block title %}Summer Camp Admin — CCMC{% endblock %}
+{% block nav_summer_camp %}active{% endblock %}
+{% block admin_content %}
+<div style="padding-bottom:16px;margin-bottom:20px;border-bottom:2px solid var(--border);">
+  <h1 style="font-size:22px;font-weight:800;color:var(--primary);margin:0;">Summer Camp Management</h1>
+</div>
+
+  <!-- ACTIVITIES MANAGEMENT -->
+  <div class="admin-section">
+    <h2>Camp Activities</h2>
+    {% for act in activities %}
+    <details style="background:var(--bg-light);border-radius:10px;padding:16px;margin-bottom:12px;border-left:4px solid var(--primary);">
+      <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:16px;font-weight:700;">{{ act.icon }} {{ act.name }}</span>
+        <span style="font-size:12px;color:var(--primary);font-weight:600;">Click to Edit ▼</span>
+      </summary>
+      <form method="POST" action="{{ url_for('admin_edit_activity', act_id=act.id) }}" enctype="multipart/form-data" style="margin-top:16px;">
+        <div class="form-row">
+          <div class="form-group"><label>Name *</label><input type="text" name="name" value="{{ act.name }}" required/></div>
+          <div class="form-group"><label>Icon (emoji)</label><input type="text" name="icon" value="{{ act.icon }}" maxlength="5"/></div>
+        </div>
+        <div class="form-group"><label>Tagline</label><input type="text" name="tagline" value="{{ act.tagline }}"/></div>
+        <div class="form-row">
+          <div class="form-group"><label>Age Group</label><input type="text" name="age_group" value="{{ act.age_group }}"/></div>
+          <div class="form-group"><label>Duration</label><input type="text" name="duration" value="{{ act.duration }}"/></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea name="description" rows="3">{{ act.description }}</textarea></div>
+        <div class="form-group"><label>Benefits (one per line)</label><textarea name="benefits" rows="4">{{ act.benefits }}</textarea></div>
+        <div class="form-group">
+          <label>Replace Photo (leave empty to keep current)</label>
+          {% if act.image_url %}<img src="{{ act.image_url }}" style="height:60px;border-radius:6px;margin-bottom:6px;display:block;"/>{% endif %}
+          <input type="file" name="image_file" accept="image/*" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;background:#fff;"/>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="submit" class="btn-modal-submit" style="width:auto;padding:10px 24px;">💾 Save Changes</button>
+          <form method="POST" action="{{ url_for('admin_delete_activity', act_id=act.id) }}" onsubmit="return confirm('Delete {{ act.name }}?')" style="margin:0;">
+            <button type="submit" class="btn-delete" style="padding:10px 16px;">Delete</button>
+          </form>
+        </div>
+      </form>
+    </details>
+    {% endfor %}
+
+    <!-- Add Activity -->
+    <details style="background:#fff;border-radius:10px;padding:16px;border:1.5px dashed var(--primary);margin-top:8px;">
+      <summary style="font-weight:700;cursor:pointer;font-size:15px;color:var(--primary);">+ Add New Activity</summary>
+      <form method="POST" action="{{ url_for('admin_add_activity') }}" class="admin-form" enctype="multipart/form-data" style="margin-top:16px;">
+        <div class="form-row">
+          <div class="form-group"><label>Activity Name *</label><input type="text" name="name" required placeholder="e.g. Tally"/></div>
+          <div class="form-group"><label>Icon (emoji)</label><input type="text" name="icon" placeholder="🎯" maxlength="5"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Tagline</label><input type="text" name="tagline" placeholder="Short description"/></div>
+          <div class="form-group"><label>Age Group</label><input type="text" name="age_group" placeholder="6–16 years"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Duration</label><input type="text" name="duration" placeholder="2 hours/day"/></div>
+          <div class="form-group"><label>Display Order</label><input type="number" name="order" placeholder="8" min="1"/></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea name="description" rows="3" placeholder="Full description..."></textarea></div>
+        <div class="form-group"><label>Benefits (one per line)</label><textarea name="benefits" rows="4" placeholder="Skill 1&#10;Skill 2&#10;Skill 3"></textarea></div>
+        <div class="form-group">
+          <label>Activity Photo</label>
+          <input type="file" name="image_file" accept="image/*" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;background:#fff;"/>
+        </div>
+        <button type="submit" class="btn-modal-submit" style="width:auto;padding:10px 24px;">Add Activity</button>
+      </form>
+    </details>
+  </div>
+
+  <!-- ADD CAMP -->
+  <div class="admin-section">
+    <h2>Add New Camp</h2>
+    <form method="POST" action="{{ url_for('admin_add_camp') }}" class="admin-form">
+      <div class="form-row">
+        <div class="form-group"><label>Camp Title *</label><input type="text" name="title" required placeholder="e.g. Summer Camp 2026 — Ganapathi Ma Nagar"/></div>
+        <div class="form-group"><label>Location *</label><input type="text" name="location" required placeholder="Full address"/></div>
+      </div>
+      <div class="form-group"><label>Description</label><textarea name="description" rows="2" placeholder="Brief description..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Start Date</label><input type="text" name="start_date" placeholder="e.g. May 15, 2026"/></div>
+        <div class="form-group"><label>End Date</label><input type="text" name="end_date" placeholder="e.g. June 15, 2026"/></div>
+        <div class="form-group"><label>Age Group</label><input type="text" name="age_group" placeholder="e.g. 6–16 years"/></div>
+      </div>
+      <button type="submit" class="btn-modal-submit" style="width:auto;padding:10px 28px;">Add Camp</button>
+    </form>
+  </div>
+
+  <!-- CAMPS + GALLERY -->
+  {% for camp in camps %}
+  <div class="admin-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <div>
+        <h2 style="margin:0;">{{ camp.title }}</h2>
+        <p style="color:var(--text-muted);font-size:13px;margin-top:4px;"><i class="fas fa-map-marker-alt"></i> {{ camp.location }}</p>
+      </div>
+      <form method="POST" action="{{ url_for('admin_delete_camp', camp_id=camp.id) }}" onsubmit="return confirm('Delete this camp?')">
+        <button type="submit" class="btn-delete">Delete Camp</button>
+      </form>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_add_gallery', camp_id=camp.id) }}" enctype="multipart/form-data" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;">
+      <div style="flex:1;min-width:200px;">
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Upload Photo</label>
+        <input type="file" name="image_file" accept="image/*" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;background:#fff;"/>
+      </div>
+      <div style="flex:1;min-width:160px;">
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Caption (optional)</label>
+        <input type="text" name="caption" placeholder="e.g. Abacus session" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;"/>
+      </div>
+      <button type="submit" class="btn-enroll" style="padding:9px 20px;white-space:nowrap;height:38px;">+ Add Photo</button>
+    </form>
+
+    {% if camp.gallery %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+      {% for img in camp.gallery %}
+      <div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:4/3;">
+        <img src="{{ img.image_url }}" alt="{{ img.caption }}" style="width:100%;height:100%;object-fit:cover;"/>
+        <form method="POST" action="{{ url_for('admin_delete_gallery', img_id=img.id) }}" style="position:absolute;top:6px;right:6px;">
+          <button type="submit" style="background:rgba(229,57,53,0.9);color:#fff;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:12px;">✕</button>
+        </form>
+        {% if img.caption %}<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;padding:4px 8px;">{{ img.caption }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--text-muted);font-size:13px;">No photos yet.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <!-- ENQUIRIES -->
+  <div class="admin-section">
+    <h2>Camp Registrations ({{ enquiries|length }})</h2>
+    {% if enquiries %}
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Child</th><th>Parent</th><th>Mobile</th><th>Age</th><th>Activity</th><th>Camp</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for e in enquiries %}
+          <tr>
+            <td><strong>{{ e.child_name }}</strong></td>
+            <td>{{ e.parent_name }}</td>
+            <td>{{ e.mobile }}</td>
+            <td>{{ e.age }}</td>
+            <td>{{ e.activity or '—' }}</td>
+            <td style="font-size:12px;">{{ e.camp.title[:30] if e.camp else '—' }}</td>
+            <td style="font-size:12px;color:var(--text-muted);">{{ e.created_at.strftime('%d %b %Y') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-muted);">No registrations yet.</p>
+    {% endif %}
+  </div>
+{% endblock %}
+

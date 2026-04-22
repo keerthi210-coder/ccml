@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Testimonials — CCMC{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner"><h1>Student Testimonials</h1><div class="breadcrumb"><a href="{{ url_for('index') }}">Home</a> › Testimonials</div></div>
+</div>
+<div style="max-width:1280px;margin:0 auto;padding:48px 20px;">
+  <div class="testimonials-grid">
+    {% for t in items %}
+    <div class="t-card">
+      <div class="t-stars">{% for i in range(t.rating) %}★{% endfor %}</div>
+      <p>"{{ t.content }}"</p>
+      <div class="t-author">
+        <div class="t-av">{{ t.avatar_letter }}</div>
+        <div><strong>{{ t.name }}</strong><small>{{ t.role }}</small></div>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fas fa-star"></i><h3>Testimonials coming soon</h3></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

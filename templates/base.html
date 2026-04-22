@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}CCMC{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <span><i class="fas fa-university"></i> CCMC Academy — Run by Coimbatore Corporation</span>
+        <span><i class="fas fa-phone"></i> {{ settings.get('phone', '6385837858') }}</span>
+        <span><i class="fas fa-envelope"></i> {{ settings.get('email', 'commr.coimbatore@tn.gov.in') }}</span>
+        <span><i class="fas fa-clock"></i> {{ settings.get('working_hours', '7:00 AM – 9:00 PM ALL DAYS') }}</span>
+      </div>
+      <div class="topbar-right">
+        <a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+        <a href="#" target="_blank"><i class="fab fa-youtube"></i></a>
+        <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="{{ url_for('index') }}" class="nav-logo">
+        <span class="logo-icon">🎓</span>
+        <div class="logo-text-wrap">
+          <span class="logo-text">CCMC <span>Academy</span></span>
+          <span class="logo-tagline">Run by Coimbatore Corporation</span>
+        </div>
+      </a>
+
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="{{ url_for('index') }}">Home</a></li>
+
+        <li class="has-dropdown">
+          <a href="#">Location <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-menu">
+            <div class="dropdown-col">
+              <h6>Our Centres</h6>
+              <a href="{{ url_for('centre_detail', slug='ksc') }}">🎓 Knowledge & Study Centre</a>
+              <a href="{{ url_for('centre_detail', slug='padaipagam-1') }}">🎨 Padaipagam I — Ganapathi  MaNagar</a>
+              <a href="{{ url_for('centre_detail', slug='padaipagam-2') }}">🎨 Padaipagam II — Koundampalayam</a>
+              <a href="{{ url_for('centre_detail', slug='ukkadam') }}" style="opacity:.7;">📍 Ukkadam <span style="font-size:10px;background:#e65100;color:#fff;padding:1px 6px;border-radius:4px;margin-left:4px;">Coming Soon</span></a>
+            </div>
+          </div>
+        </li>
+
+        <li class="has-dropdown">
+          <a href="#">Courses <i class="fas fa-chevron-down"></i></a>
+          <div class="dropdown-menu">
+            <div class="dropdown-col">
+              <h6>Exam Coaching</h6>
+              <a href="{{ url_for('courses_by_category', category='ttp') }}">TTP — Transformation Training Program</a>
+              <a href="{{ url_for('courses_by_category', category='tnpsc') }}">TNPSC</a>
+              <a href="{{ url_for('courses_by_category', category='ssc') }}">SSC</a>
+              <a href="{{ url_for('courses_by_category', category='rrb') }}">RRB</a>
+              <a href="{{ url_for('courses_by_category', category='banking') }}">Banking</a>
+              <a href="{{ url_for('courses_by_category', category='upsc') }}">UPSC</a>
+            </div>
+          </div>
+        </li>
+
+        <li><a href="{{ url_for('gallery') }}">Gallery</a></li>
+        <li><a href="{{ url_for('testimonials') }}">Testimonials</a></li>
+        <li><a href="{{ url_for('exam_calendar') }}">📅 Exam Calendar</a></li>
+        <li><a href="{{ url_for('about') }}">About Us</a></li>
+        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        {% if current_user.is_authenticated %}
+        <div class="user-menu-wrap">
+          <button class="user-btn">
+            {% if current_user.avatar %}
+            <img src="{{ current_user.avatar }}" class="user-avatar-img" alt="" />
+            {% else %}
+            <span class="user-avatar-letter">{{ current_user.name[0].upper() }}</span>
+            {% endif %}
+            {{ current_user.name.split()[0] }} <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="user-dropdown">
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('admin') }}"><i class="fas fa-cog"></i> Admin Panel</a>
+            <a href="{{ url_for('admin_tests') }}"><i class="fas fa-clipboard-list"></i> Manage Tests</a>
+            <a href="{{ url_for('admin_cms') }}"><i class="fas fa-paint-brush"></i> Website CMS</a>
+            {% else %}
+            <a href="{{ url_for('dashboard') }}"><i class="fas fa-book-open"></i> My Courses</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+          </div>
+        </div>
+        {% else %}
+        <button class="btn-portal" onclick="openPortal('login')">Student Portal</button>
+        {% endif %}
+        <button class="btn-enquire" onclick="openModal('enquiryModal')">Enquire Now</button>
+        <button class="hamburger" id="hamburger"><i class="fas fa-bars"></i></button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- FLASH MESSAGES -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-wrap">
+    {% for cat, msg in messages %}
+    <div class="flash flash-{{ cat }}">
+      <span>{{ msg }}</span>
+      <button onclick="this.parentElement.remove()">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <div class="footer-logo">🎓 CCMC Academy</div>
+        <div class="footer-tagline">Run by Coimbatore Corporation</div>
+        <p>{{ settings.get('footer_text', 'The CCMC Knowledge & Study Centres provide free competitive exam coaching, skill development, and career training for all citizens of Coimbatore.') }}</p>
+        <div class="footer-social">
+          <a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+          <a href="#" target="_blank"><i class="fab fa-youtube"></i></a>
+          <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Courses Offered</h5>
+        <a href="{{ url_for('courses_by_category', category='tnpsc') }}">TNPSC Courses</a>
+        <a href="{{ url_for('courses_by_category', category='upsc') }}">UPSC Courses</a>
+        <a href="{{ url_for('courses_by_category', category='rrb') }}">RRB Courses</a>
+        <a href="{{ url_for('courses_by_category', category='ssc') }}">SSC Courses</a>
+        <a href="{{ url_for('courses_by_category', category='banking') }}">Banking Courses</a>
+        <a href="{{ url_for('courses_by_category', category='ttp') }}">TTP Program</a>
+      </div>
+      <div class="footer-col">
+        <h5>Quick Links</h5>
+        <a href="#">PYQ Quiz</a>
+        <a href="#">Study Material</a>
+        <a href="#">About CCMC</a>
+        <a href="{{ url_for('contact') }}">Enquiry Form</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+      <div class="footer-col">
+        <h5>Contact With Us</h5>
+
+        <p><i class="fas fa-map-marker-alt"></i> Knowledge & Study Centre: 2X39+J7H, Addis St, Grey Town, ATT Colony, Gopalapuram, Coimbatore, Tamil Nadu 641018</p>
+        <p><i class="fas fa-phone"></i> {{ settings.get('phone', '6385837858') }}</p>
+        <p><i class="fas fa-envelope"></i> {{ settings.get('email', 'ttpskillcbe@gmail.com') }}</p>
+        <p><i class="fas fa-clock"></i> {{ settings.get('working_hours', '7:00 AM – 9:00 PM ALL DAYS') }}</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Copyright © 2026 CCMC. All Rights Reserved.</span>
+      <span>Designed with ❤️ in Chennai</span>
+    </div>
+  </footer>
+
+  <!-- WHATSAPP FLOAT -->
+  <a href="https://api.whatsapp.com/send/?phone=91916385837858&text=Hi%2C+I+want+to+know+more+about+CCMC+courses" class="whatsapp-float" target="_blank" title="Chat with Counsellor">
+    <i class="fab fa-whatsapp"></i>
+    <span>Contact Our Counsellor</span>
+  </a>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+     STUDENT PORTAL MODAL (Login + Sign Up tabs)
+═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="portalModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('portalModal')">✕</button>
+      <div class="modal-header">
+        <div class="modal-logo">🎓 CCMC</div>
+        <h3>Student Portal</h3>
+        <p>Login or create your account to get started</p>
+      </div>
+      <div class="portal-tabs">
+        <button class="portal-tab active" id="tabLogin" onclick="switchTab('login')">Login</button>
+        <button class="portal-tab" id="tabSignup" onclick="switchTab('signup')">Sign Up Free</button>
+      </div>
+      <!-- LOGIN -->
+      <div class="portal-panel" id="panelLogin">
+        <a href="{{ url_for('google_login') }}" class="btn-google">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="G" />
+          Login with Google (existing users only)
+        </a>
+        <div style="background:#fff3e0;border-radius:6px;padding:8px 12px;font-size:12px;color:#e65100;margin:0 28px 14px;">
+          ⚠️ Google login is only for users who have already registered with their email and Aadhaar.
+        </div>
+        <div class="modal-divider"><span>or login with email</span></div>
+        <form method="POST" action="/direct-login">
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <div class="input-icon-wrap">
+              <input type="password" name="password" id="lpwd" placeholder="Your password" required />
+              <i class="fas fa-eye toggle-pwd" onclick="togglePwd('lpwd',this)"></i>
+            </div>
+          </div>
+          <div class="form-error" id="loginError"></div>
+          <button type="submit" class="btn-modal-submit">Log In</button>
+        </form>
+        <div class="modal-switch">Don't have an account? <a href="#" onclick="switchTab('signup')">Sign Up Free</a></div>
+      </div>
+      <!-- SIGNUP -->
+      <div class="portal-panel" id="panelSignup" style="display:none">
+        <div style="background:#e8f5e9;border-radius:8px;padding:12px 20px;margin:0 28px 16px;font-size:13px;color:#2e7d32;">
+          ✅ Register with your email and Aadhaar to create your account. Google login will be available after registration.
+        </div>
+
+        <!-- Step 1: Details -->
+        <div id="signupStep1">
+          <form id="signupForm" onsubmit="submitSignup(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name <span class="req">*</span></label>
+                <input type="text" name="name" id="s_name" placeholder="Your full name" required />
+              </div>
+              <div class="form-group">
+                <label>Date of Birth <span class="req">*</span></label>
+                <input type="date" name="dob" id="s_dob" required max="" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Phone Number <span class="req">*</span></label>
+                <div class="input-icon-wrap">
+                  <input type="tel" name="phone" id="s_phone" placeholder="10-digit mobile" maxlength="10" inputmode="numeric" required oninput="this.value=this.value.replace(/\D/g,'')" />
+                  <i class="fas fa-mobile-alt" style="pointer-events:none;color:var(--text-muted);"></i>
+                </div>
+                <small id="phoneValidMsg" style="font-size:11px;margin-top:3px;display:block;"></small>
+              </div>
+              <div class="form-group">
+                <label>WhatsApp / Alt Mobile</label>
+                <input type="tel" name="mobile" id="s_mobile" placeholder="+91 XXXXX XXXXX" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Email Address <span class="req">*</span></label>
+              <input type="email" name="email" id="s_email" placeholder="you@example.com" required />
+            </div>
+            <div class="form-group">
+              <label>Password <span class="req">*</span></label>
+              <div class="input-icon-wrap">
+                <input type="password" name="password" id="spwd" placeholder="Min 8 characters" required minlength="8" />
+                <i class="fas fa-eye toggle-pwd" onclick="togglePwd('spwd',this)"></i>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Target Exam</label>
+              <select name="target_exam" id="s_exam">
+                <option value="">Select your target exam</option>
+                <option>UPSC Civil Services</option>
+                <option>TNPSC Group 1</option>
+                <option>TNPSC Group 2</option>
+                <option>TNPSC Group 4</option>
+                <option>RRB NTPC</option>
+                <option>RRB Group D</option>
+                <option>SSC CGL</option>
+                <option>SSC CHSL</option>
+                <option>SBI PO</option>
+                <option>IBPS PO</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Aadhaar Number <span class="req">*</span></label>
+              <div class="input-icon-wrap">
+                <input type="text" name="aadhaar" id="s_aadhaar" placeholder="XXXX XXXX XXXX" maxlength="14" inputmode="numeric" required oninput="formatAadhaar(this)" />
+                <i class="fas fa-id-card" style="pointer-events:none;color:var(--text-muted);"></i>
+              </div>
+              <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;">🔒 Your Aadhaar is encrypted and stored securely</small>
+            </div>
+            <div class="form-group">
+              <label>Present Address <span class="req">*</span></label>
+              <textarea name="present_address" id="s_present_address" placeholder="Door No, Street, City, State, Pincode" rows="2" required style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical;"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Permanent Address <span class="req">*</span></label>
+              <textarea name="permanent_address" id="s_permanent_address" placeholder="Door No, Street, City, State, Pincode" rows="2" required style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical;"></textarea>
+              <div style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-muted);cursor:pointer;">
+                  <input type="checkbox" id="sameAddressCheck" onchange="copySameAddress(this)" style="margin-right:4px;" />
+                  Same as present address
+                </label>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Blood Group <span class="req">*</span></label>
+                <select name="blood_group" id="s_blood_group" required>
+                  <option value="">Select blood group</option>
+                  <option>A+</option><option>A-</option>
+                  <option>B+</option><option>B-</option>
+                  <option>O+</option><option>O-</option>
+                  <option>AB+</option><option>AB-</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Educational Qualification <span class="req">*</span></label>
+                <select name="educational_qualification" id="s_edu_qual" required>
+                  <option value="">Select qualification</option>
+                  <option>10th / SSLC</option>
+                  <option>12th / HSC</option>
+                  <option>Diploma</option>
+                  <option>UG — B.A.</option>
+                  <option>UG — B.Sc.</option>
+                  <option>UG — B.Com.</option>
+                  <option>UG — B.E. / B.Tech.</option>
+                  <option>UG — Other</option>
+                  <option>PG — M.A.</option>
+                  <option>PG — M.Sc.</option>
+                  <option>PG — M.E. / M.Tech.</option>
+                  <option>PG — Other</option>
+                  <option>Ph.D.</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" id="terms" required />
+              <label for="terms">I agree to the <a href="#">Terms & Conditions</a></label>
+            </div>
+            <div class="form-error" id="signupError"></div>
+            <button type="submit" class="btn-modal-submit" id="sendOtpBtn">Send OTP to Email & Phone</button>
+          </form>
+        </div>
+
+        <!-- Step 2: OTP Verification -->
+        <div id="signupStep2" style="display:none;padding:0 28px 28px;">
+          <div class="otp-info-box">
+            <div class="otp-icon">📲</div>
+            <p>We've sent a 6-digit OTP to your<br /><strong>email & phone number</strong></p>
+            <small id="otpEmailDisplay"></small><br />
+            <small>Valid for 10 minutes.</small>
+          </div>
+          <div class="otp-inputs" id="otpInputs">
+            <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" />
+            <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" />
+            <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" />
+            <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" />
+            <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" />
+            <input class="otp-box" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" />
+          </div>
+          <div class="otp-timer">Resend OTP in <span id="otpCountdown">60</span>s</div>
+          <div class="form-error" id="otpError"></div>
+          <button class="btn-modal-submit" onclick="verifyOtp()">Verify & Create Account</button>
+          <div style="text-align:center;margin-top:12px;">
+            <button id="resendBtn" onclick="resendOtp()" style="background:none;border:none;color:var(--primary);font-weight:600;cursor:pointer;display:none;">Resend OTP</button>
+            <button onclick="backToSignup()" style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;margin-left:12px;">← Change Email</button>
+          </div>
+        </div>
+
+        <div class="modal-switch">Already have an account? <a href="#" onclick="switchTab('login')">Log In</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+     ENQUIRY MODAL
+═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="enquiryModal">
+    <div class="modal-box modal-wide">
+      <button class="modal-close" onclick="closeModal('enquiryModal')">✕</button>
+      <div class="modal-header">
+        <div class="modal-logo">🎓 CCMC</div>
+        <h3>Student Enquiry Form</h3>
+        <p>Have Any Questions? Let's Talk!</p>
+      </div>
+      <form action="{{ url_for('contact') }}" method="POST" id="enquiryForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Name <span class="req">*</span></label>
+            <input type="text" name="name" placeholder="Your full name" required />
+          </div>
+          <div class="form-group">
+            <label>Email Address <span class="req">*</span></label>
+            <input type="email" name="email" placeholder="you@example.com" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Mobile Number <span class="req">*</span></label>
+            <input type="tel" name="mobile" placeholder="+91 XXXXX XXXXX" required />
+          </div>
+          <div class="form-group">
+            <label>State <span class="req">*</span></label>
+            <select name="state" required>
+              <option value="">Select State</option>
+              <option>Tamil Nadu</option>
+              <option>Karnataka</option>
+              <option>Kerala</option>
+              <option>Andhra Pradesh</option>
+              <option>Telangana</option>
+              <option>Maharashtra</option>
+              <option>Delhi</option>
+              <option>Uttar Pradesh</option>
+              <option>Rajasthan</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>City <span class="req">*</span></label>
+            <input type="text" name="city" placeholder="Your city" required />
+          </div>
+          <div class="form-group">
+            <label>College Name</label>
+            <input type="text" name="college" placeholder="Your college/university" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Highest Degree <span class="req">*</span></label>
+            <select name="highest_degree" required>
+              <option value="">Select Degree</option>
+              <option>10th</option>
+              <option>12th</option>
+              <option>Diploma</option>
+              <option>B.E / B.Tech</option>
+              <option>B.Sc</option>
+              <option>B.A</option>
+              <option>B.Com</option>
+              <option>M.A</option>
+              <option>M.Sc</option>
+              <option>MBA</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Target Exam <span class="req">*</span></label>
+            <select name="target_exam" required>
+              <option value="">Select Exam</option>
+              <option>UPSC Civil Services</option>
+              <option>TNPSC Group 1</option>
+              <option>TNPSC Group 2</option>
+              <option>TNPSC Group 4</option>
+              <option>RRB NTPC</option>
+              <option>RRB Group D</option>
+              <option>RRB JE</option>
+              <option>SSC CGL</option>
+              <option>SSC CHSL</option>
+              <option>SSC MTS</option>
+              <option>SBI PO</option>
+              <option>IBPS PO</option>
+              <option>RBI Grade B</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Preferred Course</label>
+          <select name="preferred_course">
+            <option value="">Select Course</option>
+            <option>Prelims cum Mains</option>
+            <option>Test Series</option>
+            <option>Optional Subject</option>
+            <option>Online Course</option>
+            <option>Offline Course</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea name="message" rows="3" placeholder="Any specific queries or requirements..."></textarea>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="enqTerms" required />
+          <label for="enqTerms">I agree to the terms and conditions</label>
+        </div>
+        <button type="submit" class="btn-modal-submit">Submit Enquiry</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+
+</html>
+
+

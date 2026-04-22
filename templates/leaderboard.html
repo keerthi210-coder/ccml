@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard — {{ test.title }}{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="pb-inner">
+    <h1>🏆 Leaderboard</h1>
+    <p>{{ test.title }} · {{ test.course.title if test.course else 'All Students — Global Test' }}</p>
+  </div>
+</div>
+<div style="max-width:900px;margin:40px auto;padding:0 20px;">
+
+  <!-- Top 3 Podium -->
+  {% if attempts %}
+  <div style="display:flex;justify-content:center;align-items:flex-end;gap:16px;margin-bottom:40px;flex-wrap:wrap;">
+    {% for attempt in attempts[:3] %}
+    {% set pos = loop.index %}
+    <div style="text-align:center;{% if pos==1 %}order:2;{% elif pos==2 %}order:1;{% else %}order:3;{% endif %}">
+      <div style="font-size:{% if pos==1 %}48px{% else %}36px{% endif %};">
+        {% if pos==1 %}🥇{% elif pos==2 %}🥈{% else %}🥉{% endif %}
+      </div>
+      <div style="width:{% if pos==1 %}80px{% else %}64px{% endif %};height:{% if pos==1 %}80px{% else %}64px{% endif %};border-radius:50%;background:var(--primary);color:#fff;font-size:{% if pos==1 %}28px{% else %}22px{% endif %};font-weight:800;display:flex;align-items:center;justify-content:center;margin:8px auto;">
+        {{ attempt.user.name[0].upper() }}
+      </div>
+      <div style="font-weight:700;font-size:{% if pos==1 %}16px{% else %}14px{% endif %};">{{ attempt.user.name }}</div>
+      <div style="font-size:{% if pos==1 %}22px{% else %}18px{% endif %};font-weight:800;color:var(--primary);">{{ attempt.score }}/{{ attempt.total_marks }}</div>
+      <div style="font-size:11px;color:var(--text-muted);">{{ (attempt.score/attempt.total_marks*100)|int }}%</div>
+      <div style="background:{% if pos==1 %}var(--gold){% elif pos==2 %}#b0bec5{% else %}#cd7f32{% endif %};height:{% if pos==1 %}100px{% elif pos==2 %}70px{% else %}50px{% endif %};width:80px;margin:8px auto 0;border-radius:6px 6px 0 0;"></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Full Table -->
+  <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-size:18px;font-weight:700;">Full Rankings</h3>
+      <span style="font-size:13px;color:var(--text-muted);">{{ attempts|length }} participant(s)</span>
+    </div>
+    {% if attempts %}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Student</th>
+          <th>Score</th>
+          <th>Percentage</th>
+          <th>Correct</th>
+          <th>Wrong</th>
+          <th>Time Taken</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for attempt in attempts %}
+        {% set pct = (attempt.score / attempt.total_marks * 100)|int if attempt.total_marks > 0 else 0 %}
+        <tr {% if not is_admin and my_attempt and attempt.id == my_attempt.id %}style="background:rgba(26,35,126,0.06);font-weight:600;"{% endif %}>
+          <td>
+            {% if loop.index == 1 %}🥇
+            {% elif loop.index == 2 %}🥈
+            {% elif loop.index == 3 %}🥉
+            {% else %}#{{ loop.index }}{% endif %}
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">{{ attempt.user.name[0].upper() }}</div>
+              <div>
+                <div>{{ attempt.user.name }}</div>
+                {% if not is_admin and my_attempt and attempt.id == my_attempt.id %}
+                <div style="font-size:11px;color:var(--primary);">← You</div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td><strong>{{ attempt.score }}/{{ attempt.total_marks }}</strong></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="flex:1;background:var(--border);border-radius:4px;height:6px;min-width:60px;">
+                <div style="width:{{ pct }}%;background:{% if pct>=60 %}var(--green){% else %}var(--accent){% endif %};height:6px;border-radius:4px;"></div>
+              </div>
+              <span>{{ pct }}%</span>
+            </div>
+          </td>
+          <td style="color:var(--green);font-weight:600;">{{ attempt.correct_count }}</td>
+          <td style="color:var(--accent);font-weight:600;">{{ attempt.wrong_count }}</td>
+          <td>{{ '%d:%02d'|format(attempt.time_taken // 60, attempt.time_taken % 60) }}</td>
+          <td style="font-size:12px;color:var(--text-muted);">{{ attempt.submitted_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state" style="padding:40px;">
+      <i class="fas fa-trophy"></i>
+      <h3>No attempts yet</h3>
+      <p>Be the first to take this test!</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
+    {% if is_admin %}
+    <a href="{{ url_for('admin_tests') }}" class="btn-enquire-sm" style="text-decoration:none;">← Back to Tests</a>
+    {% else %}
+    <a href="{{ url_for('dashboard') }}" class="btn-enquire-sm" style="text-decoration:none;">← Back to Dashboard</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

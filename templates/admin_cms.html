@@ -1,0 +1,119 @@
+{% extends 'admin_base.html' %}
+{% block title %}Website CMS — CCMC Admin{% endblock %}
+{% block nav_cms %}active{% endblock %}
+{% block admin_content %}
+<div style="padding-bottom:16px;margin-bottom:20px;border-bottom:2px solid var(--border);">
+  <h1 style="font-size:22px;font-weight:800;color:#6c3483;margin:0;">🎨 Website CMS</h1>
+  <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">Control everything on your website — no developer needed</p>
+</div>
+
+  <!-- ═══ HERO SLIDER BANNERS ═══ -->
+  <div class="admin-section">
+    <h2>🖼️ Hero Slider Banners</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">These are the big photos that slide on the homepage. Upload new ones, delete old ones.</p>
+
+    <!-- Current banners -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
+      {% for b in banners %}
+      <div style="background:var(--bg-light);border-radius:10px;overflow:hidden;border:1.5px solid var(--border);">
+        <div style="position:relative;height:130px;">
+          <img src="{{ b.image_url }}" style="width:100%;height:100%;object-fit:cover;"/>
+          {% if not b.is_active %}<div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">HIDDEN</div>{% endif %}
+        </div>
+        <div style="padding:10px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:4px;">{{ b.title[:40] if b.title else 'No title' }}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Order: {{ b.order }}</div>
+          <div style="display:flex;gap:6px;">
+            <form method="POST" action="{{ url_for('admin_toggle_banner', bid=b.id) }}" style="flex:1;">
+              <button type="submit" style="width:100%;background:{% if b.is_active %}var(--green){% else %}var(--text-muted){% endif %};color:#fff;border:none;padding:5px;border-radius:5px;font-size:11px;cursor:pointer;">
+                {% if b.is_active %}✓ Visible{% else %}Hidden{% endif %}
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_delete_banner', bid=b.id) }}" onsubmit="return confirm('Delete this banner?')">
+              <button type="submit" class="btn-delete">✕</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Add new banner -->
+    <details style="background:#fff;border-radius:10px;padding:20px;border:1.5px dashed var(--primary);">
+      <summary style="font-weight:700;cursor:pointer;color:var(--primary);font-size:15px;">+ Add New Slide to Homepage</summary>
+      <form method="POST" action="{{ url_for('admin_add_banner') }}" enctype="multipart/form-data" style="margin-top:16px;">
+        <div class="form-group">
+          <label>Upload Banner Photo *</label>
+          <input type="file" name="image_file" accept="image/*" required style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;background:#fff;"/>
+          <small style="color:var(--text-muted);">Best size: 1920×600px. JPG or PNG.</small>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Title (big text)</label><input type="text" name="title" placeholder="e.g. Your Dream Starts Here"/></div>
+          <div class="form-group"><label>Badge (small top text)</label><input type="text" name="badge" placeholder="e.g. 🏆 Best Coaching"/></div>
+        </div>
+        <div class="form-group"><label>Subtitle (small text below title)</label><input type="text" name="subtitle" placeholder="e.g. Expert coaching for UPSC, TNPSC..."/></div>
+        <div class="form-row">
+          <div class="form-group"><label>Button Text</label><input type="text" name="btn_text" placeholder="Explore Courses" value="Explore Courses"/></div>
+          <div class="form-group"><label>Button Link</label><input type="text" name="btn_link" placeholder="/courses/upsc" value="#"/></div>
+        </div>
+        <button type="submit" class="btn-modal-submit" style="width:auto;padding:11px 28px;">Add to Slider</button>
+      </form>
+    </details>
+  </div>
+
+  <!-- ═══ ACTIVITY PHOTOS ═══ -->
+  <div class="admin-section">
+    <h2>📸 Activity Photos (Multiple per Activity)</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Add multiple photos for each summer camp activity. Students see these on the activity detail page.</p>
+    {% for act in activities %}
+    <div style="background:var(--bg-light);border-radius:10px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:700;margin-bottom:12px;">{{ act.icon }} {{ act.name }}</div>
+      <!-- Existing photos -->
+      {% if act.photos is defined and act.photos %}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        {% for photo in act.photos %}
+        <div style="position:relative;width:100px;height:80px;border-radius:8px;overflow:hidden;">
+          <img src="{{ photo.image_url }}" style="width:100%;height:100%;object-fit:cover;"/>
+          <form method="POST" action="{{ url_for('admin_delete_activity_photo', pid=photo.id) }}" style="position:absolute;top:3px;right:3px;">
+            <button type="submit" style="background:rgba(229,57,53,0.9);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:11px;">✕</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <!-- Upload multiple -->
+      <form method="POST" action="{{ url_for('admin_add_activity_photo', act_id=act.id) }}" enctype="multipart/form-data" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="flex:2;min-width:200px;">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Upload Photos (select multiple)</label>
+          <input type="file" name="image_files" accept="image/*" multiple style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;background:#fff;"/>
+        </div>
+        <div style="flex:1;min-width:120px;">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Caption</label>
+          <input type="text" name="caption" placeholder="Optional" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;"/>
+        </div>
+        <button type="submit" class="btn-enroll" style="padding:9px 16px;white-space:nowrap;">Upload</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ═══ SITE SETTINGS ═══ -->
+  <div class="admin-section">
+    <h2>⚙️ Site Settings</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">Change phone number, address, about text, and other site-wide content.</p>
+    <form method="POST" action="{{ url_for('admin_save_settings') }}">
+      {% for s in cms_settings %}
+      <div class="form-group">
+        <label>{{ s.label }}</label>
+        {% if s.setting_type == 'textarea' %}
+          <textarea name="setting_{{ s.key }}" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;font-family:inherit;">{{ s.value }}</textarea>
+        {% else %}
+          <input type="text" name="setting_{{ s.key }}" value="{{ s.value }}" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;"/>
+        {% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn-modal-submit" style="width:auto;padding:12px 32px;">💾 Save All Settings</button>
+    </form>
+  </div>
+
+{% endblock %}

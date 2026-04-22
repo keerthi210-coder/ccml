@@ -1,0 +1,52 @@
+<div class="course-card">
+  <a href="{{ url_for('course_detail', course_id=course.id) }}">
+    <div class="course-thumb">
+      <img src="{{ course.thumbnail }}" alt="{{ course.title }}" loading="lazy" />
+    </div>
+    <div class="course-body">
+      <div class="course-cat-tag">{{ course.category }} — {{ course.sub_category }}</div>
+      <h3>{{ course.title }}</h3>
+      <p class="course-desc">{{ course.description[:100] }}...</p>
+
+      {% if course.category == 'TNPSC' %}
+      <!-- TNPSC Centers Information -->
+      <div style="margin:12px 0;padding:10px;background:rgba(26,35,126,0.05);border-radius:8px;border-left:3px solid var(--primary);">
+        <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">📍 Available at Centers:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          {% for centre in course.centres %}
+          <span style="background:var(--primary);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;">{{ centre.name }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% elif course.category in ['TTP', 'SSC', 'RRB', 'BANKING', 'IBPS'] %}
+      <!-- Other Categories - Knowledge & Study Center Only -->
+      <div style="margin:12px 0;padding:10px;background:rgba(26,35,126,0.05);border-radius:8px;border-left:3px solid var(--primary);">
+        <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">📍 Available at Center:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          <span style="background:var(--primary);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;">Knowledge & Study Centre</span>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="course-meta">
+        <span><i class="fas fa-clock"></i> {{ course.duration }}</span>
+        <span><i class="fas fa-book"></i> {{ course.lessons }} lessons</span>
+        <span><i class="fas fa-map-marker-alt"></i> {{ course.mode }}</span>
+      </div>
+      <div class="course-price-row">
+        <span class="cprice free">🆓 Free — Government Program</span>
+      </div>
+    </div>
+  </a>
+  <div class="course-footer">
+    {% if course.mode == 'Offline' %}
+    <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-enroll" style="background:var(--green);">🏫 Visit Centre</a>
+    <button class="btn-enquire-sm" onclick="openModal('enquiryModal')">Enquire</button>
+    {% elif course.id in enrolled_ids %}
+    <a href="{{ url_for('dashboard') }}" class="btn-enroll enrolled">✓ Continue Learning</a>
+    {% else %}
+    <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-enroll">Enroll Free</a>
+    <button class="btn-enquire-sm" onclick="openModal('enquiryModal')">Enquire</button>
+    {% endif %}
+  </div>
+</div>
